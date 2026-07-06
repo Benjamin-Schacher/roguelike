@@ -1,0 +1,30 @@
+package com.eltim.rogue.item.enumerateur;
+
+public enum itemTypeEnum {
+    WEAPON,
+    ARMOR,
+    POTION,
+    KEY,
+    POLEARM,
+    HELMET,
+    SHOES,
+    RING,
+    NECKLACE,
+    GLOVES,
+    LEGGINGS,
+    DAGGER,
+    SHIELD,
+    MAGIC,
+    STAFF,
+    BOOK,
+    DOUBLE_BLADE,
+    HAMMER,
+    SWORD,
+    AXE,
+    WAND,
+    TWO_HANDED,
+    BOW,
+    CROSSBOW,
+    LONGBOW,
+    SHORT_BOW
+}

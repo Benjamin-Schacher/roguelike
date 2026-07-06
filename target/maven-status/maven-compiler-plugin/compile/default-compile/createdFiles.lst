@@ -1,0 +1,11 @@
+com\eltim\rogue\alteration\alteration.class
+com\eltim\rogue\entity\classe\classe.class
+com\eltim\rogue\system\combatSysteme$1.class
+com\eltim\rogue\entity\player.class
+com\eltim\rogue\item\ItemFactory$1.class
+com\eltim\rogue\entity\environment\chest$1.class
+com\eltim\rogue\system\combatSysteme.class
+com\eltim\rogue\system\damageSysteme$1.class
+com\eltim\rogue\system\InventorySystem$1.class
+com\eltim\rogue\world\map.class
+com\eltim\rogue\engine\inputHandler.class
