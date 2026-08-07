@@ -8,5 +8,8 @@ public enum damageTypeEnum {
     POISON,
     LIGHTNING,
     PHYSICAL,
-    MAGICAL;
+    MAGICAL,
+    FROST,
+    DISTANCE,
+    EXPLOSION;
 }

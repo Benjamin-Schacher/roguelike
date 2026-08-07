@@ -9,5 +9,8 @@ public enum chestTypeEnum {
     TRAPED,
     CREST,
     ARMORYCHEST,
-    MERCHANT,    
+    MERCHANT,
+    ALCHEMIST,
+    SPECIAL
 }
+

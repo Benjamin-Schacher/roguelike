@@ -29,3 +29,180 @@ tier 2 "Hurlement de guerrier" : vous est vos équipier gagner un bonnus d'attaq
 tier 3 "Frénézie meurtrière" : quand vous tuer un adversaire, vous gnger un bonus de touche et de dégat (+1 par énnemie abattue, marche sur les invocation)
 tier 4 "Hurlement de provocation" : pendant 1d4/tour les adversaire vous attaque en prioriter.
 tier 5 "Double attaque" : vous avez une action supplémentaire
+
+
+
+
+---------------------------------------- Equipement ----------------------------------------
+
+equipement :
+
+regle de poids (carac d'équipement) :
+lourd : need force suppérieur a 16
+moyen : need force suppérieur a 12
+leger : pas besoin de force
+
+regle de savoir (carac d'équipement) :
+mystique : need sagesse 16
+technique : need sagesse 12
+commun : pas besoin de sagesse
+
+
+---------------------
+arme commune : 
+
+epee = ("Épée", 1, 6, itemTypeEnum.SWORD, itemQualityTypeEnum.COMMON , weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1));
+arc = ("Arc", 1, 6, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1));
+dague = ("Dague", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1));
+bouclierBois = ("Bouclier en bois", 1, 4, itemTypeEnum.SHIELD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1));
+baton = ("Baton", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1));
+marteau = ("Marteau", 1, 6, itemTypeEnum.HAMMER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(1));
+hache2main = ("Hache a deux main", 1, 8, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(2));
+hache = ("Hache", 1, 6, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1));
+arcLong = ("Arc long", 1, 8, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, moyen, savoir(commun), cost(2));
+
+potion de commune :
+
+LowHealpotion = ("Potion de soin mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.HEAL, cost(3));
+LowManaPotion = ("Potion de mana mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.MANA, cost(3));
+
+equiepemnt de commune : 
+
+bottesCuir = ("Bottes en cuire", buff.defense(1), itemTypeEnum.FOOT, itemQualityTypeEnum.COMMON, leger, cost(1));
+robeEnTissu = ("Robe en tissu", buff.defense(1), itemTypeEnum.ARMOR, itemQualityTypeEnum.COMMON, leger, cost(1));
+cuissardesCuir = ("Cuissardes en cuire", buff.defense(1), itemTypeEnum.LEGS, itemQualityTypeEnum.COMMON, moyen, cost(1));
+gantCuir = ("Gant en cuire", buff.defense(1), itemTypeEnum.GLOVES, itemQualityTypeEnum.COMMON, leger, cost(1));
+casqueEnCuir = ("Casque en cuire", buff.defense(1), itemTypeEnum.HELMET, itemQualityTypeEnum.COMMON, leger, cost(1));
+plaqueDeCuir = ("Plaque de Cuir", buff.defense(2), itemTypeEnum.ARMOR, itemQualityTypeEnum.COMMON, moyen, cost(2));
+
+objet de commune :
+
+dagueDeLancer = ("Dague de lancer", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.PIERCING, savoir(commun), cost(1));
+sacDeSable = ("Sac de sable", buff.attack(-2), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(commun), cost(0,25));
+bandage = ("Bandage", buff.heal(1), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(technique), cost(0,5));
+pierre = ("Pierre", 1, 2, damageTypeEnum.DISTANCE, attackeTypeEnum.BLUNT, savoir(commun), cost(0,1));
+
+
+---------------------
+arme inhabituelle : 
+
+bouclierFer = ("Bouclier en fer", 1, 6, itemTypeEnum.SHIELD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, lourd, savoir(commun), cost(8));
+epee2main = ("Épée a deux main", 1, 8, itemTypeEnum.SWORD, itemQualityTypeEnum.UNCOMMON , weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(6));
+marteau2main = ("Marteau a deux main", 1, 8, itemTypeEnum.HAMMER, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.STOMPING, lourd, savoir(commun), cost(4));
+halebarde = ("Halebarde", 1, 10, itemTypeEnum.POLEARM, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(8));
+batonFerer = ("Baton férer", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(5));
+oldGrimoire = ("Grimoire poussiéreux", 1, 6, itemTypeEnum.BOOK, itemQualityTypeEnum.COMMON, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.BLUNT,leger, savoir(technique), cost(12));
+arbaleteHand = ("Arbalète de poing", 1, 6, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.DISTANCE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, lourd, savoir(technique), cost(10));
+
+potion inhabituelle :
+
+Healpotion = ("Potion de soin", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.HEAL, cost(6));
+ManaPotion = ("Potion de mana", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.MANA, cost(6));
+AgilityPotion = ("Potion d'agilité", agiliter(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+StrengthPotion = ("Potion de force", force(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+IntelligencePotion = ("Potion d'intelligence", intelligence(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+ConstitutionPotion = ("Potion de constitution", constitution(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+CharismaPotion = ("Potion de charisme", charisma(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+SagessePotion = ("Potion de sagesse", sagesse(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+
+equiepemnt inhabituelle : 
+
+plaqueDeFer = ("Plaque de fer", buff.defense(3), itemTypeEnum.ARMOR, itemQualityTypeEnum.UNCOMMON, lourd, cost(8));
+cuirasseDeCuir = ("Cuirasse de Cuir", buff.defense(3), itemTypeEnum.ARMOR, itemQualityTypeEnum.UNCOMMON, moyen, cost(5));
+gantDeFer = ("Gant de fer", buff.defense(2), itemTypeEnum.GLOVES, itemQualityTypeEnum.UNCOMMON, moyen, cost(3));
+casqueEnFer = ("Casque en fer", buff.defense(2), itemTypeEnum.HELMET, itemQualityTypeEnum.UNCOMMON, moyen, cost(3));
+botteDeFer = ("Botte de fer", buff.defense(2), itemTypeEnum.FOOT, itemQualityTypeEnum.UNCOMMON, moyen, cost(3));
+cuissardeDeFer = ("Cuissarde de fer", buff.defense(3), itemTypeEnum.LEGS, itemQualityTypeEnum.UNCOMMON, lourd, cost(6));
+robeEpaisse = ("Robe epaisse", buff.defense(2), itemTypeEnum.ARMOR, itemQualityTypeEnum.UNCOMMON,leger, cost(2));
+anneauDeProtection = ("Anneau de protection", buff.defense(1), itemTypeEnum.RING, itemQualityTypeEnum.UNCOMMON,leger, cost(12));
+amuletteDeProtection = ("amulette de protection", buff.defense(1), itemTypeEnum.NECK, itemQualityTypeEnum.UNCOMMON,leger, cost(12));
+
+
+objet inhabituelle :
+
+shuriken = ("Shuriken", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.SHARPNESS, savoir(technique), cost(1));
+parcheminDeResistancePhysique = ("Parchemin de resistance physique", buff.resistance(physique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
+parcheminDeResistanceMagique = ("Parchemin de resistance magique", buff.resistance(magique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
+parcheminDeTraitDeFeu = ("Parchemin de trait de feu", 1, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.FIRE, savoir(mystique), cost(2));
+fioledepoison = ("Fiole de poison", temporaryDamage(1, nbTour(3)), damageTypeEnum.DISTANCE, attackeTypeEnum.POISON, savoir(commun), cost(2));
+fumigene = ("Fumigene", buff.equipe.defense(1, nbtour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
+fioledepoudreNoire = ("Fiole de poudre noire", 2, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(3));
+
+----------------------
+arme rare : 
+
+grimoireUncommen = ("Grimoire", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.BLUNT,leger, savoir(mystique), cost(20));
+grimoireRouge = ("Grimoire de feu", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.FIRE,leger, savoir(mystique), cost(20));
+grimoireBleu = ("Grimoire de froid", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.FROST,leger, savoir(mystique), cost(20));
+grimoireVert = ("Grimoire de poison", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.POISON,leger, savoir(mystique), cost(20));
+arbalete = ("Arbalète", 1, 12, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.RARE, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, lourd, savoir(technique), cost(10));
+
+potion rare :
+
+BigHealpotion = ("Grande Potion de soin", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.HEAL, cost(15));
+BigManaPotion = ("Grande Potion de mana", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.MANA, cost(15));
+PotiondeResistanceAuFeu = ("Potion de resistance au feu", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuFroid = ("Potion de resistance au froid", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuPoison = ("Potion de resistance au poison", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuDistance = ("Potion de resistance au distance", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuPhysique = ("Potion de resistance au physique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuMagique = ("Potion de resistance au magique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+PotiondeResistanceAuExplosion = ("Potion de resistance au explosion", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+
+equiepemnt rare : 
+
+plastronDeFer = ("Plastron de fer", buff.defense(4), itemTypeEnum.ARMOR, itemQualityTypeEnum.RARE, lourd, cost(20));
+robeEnchanter = ("Robe enchanter", buff.defense(3), itemTypeEnum.ARMOR, itemQualityTypeEnum.RARE,leger, cost(30));
+anneauDuGuerrier = ("Anneau du guerrier", buff.force(2), itemTypeEnum.RING, itemQualityTypeEnum.RARE,leger, cost(30));
+anneauDeMagie = ("Anneau de mage", buff.intelligence(2), itemTypeEnum.RING, itemQualityTypeEnum.RARE,leger, cost(30));
+colierDeRégenération = ("Colier de régénération", buff.mana.endTurn(1), itemTypeEnum.NECKLACE, itemQualityTypeEnum.RARE,leger, cost(30));
+
+objet rare :
+
+grenade = ("Grenade", 5, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(10));
+parcheminDefaiblissement = ("Parchemin de défaiblissement", buff.weaken(all, nbTour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(10));
+parcheminDeResistanceElementaire = ("Parchemin de resistance elementaire", buff.resistance(elementaire.all), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(20));
+
+----------------------
+arme légendaire : 
+
+lakua = ("La kua", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100));
+lacoubee = ("La coubée", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100));
+dagueAllusiner = ("Dague hallucinée", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.PIERCING, leger, savoir(mystique), cost(100), touche.autosuccess);
+bouclierdesoufrance = ("Bouclier de souffrance", buff.damagereturn(4), itemTypeEnum.SHIELD, itemQualityTypeEnum.LEGENDARY, moyen, cost(100));
+
+potion légendaire :
+
+ExellentHealpotion = ("Potion de soin ultime", heal(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(30));
+ExellentManaPotion = ("Potion de mana ultime", mana(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.MANA, cost(30));
+
+equiepemnt légendaire : 
+
+monocleNain = ("Monocle Nain", buff.attack.distance(+5), itemTypeEnum.HELMET, itemQualityTypeEnum.LEGENDARY, leger, cost(100));
+armureEthere = ("Armure Ether", buff.defense(5), itemTypeEnum.ARMOR, itemQualityTypeEnum.LEGENDARY, leger, cost(100));
+
+objet légendaire :
+
+potionderesurection = ("Potion de resurrection", heal(max), resurrection(true), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(100));
+
+
+
+---------------------------------------- Coffre ----------------------------------------
+
+
+plusieur type de coffre :
+
+dans les coffre classique qu'ion peux trouver a travers les niveaux il y a forcement 1 à 3 loot d'une qualité egale a la qualité du coffre. Donc un coffre de type UNCOMMON loot 1 a 3 objet UNCOMMON et un coffre de type COMMON loot 1 a 3 objet COMMON.
+
+néanmoins certain coffre spéciale pourrons contenir des loot précis spécialment lister. (je veux que tu pense a des coffre spécial en plus des coffre de base)
+
+---------------------------------------- Combat ----------------------------------------
+
+Quand c'est le tour d'un joueur il peux en plus de sont action d'attaque principal / secondaire / fuire / lancer un sort, il peux en plus de l'une de ses action utiliser un et un seul objet dans son inventaire. (tout les personnage partage le meme inventaire, un inventaire du groupe)
+
+
+
+
+
+
+

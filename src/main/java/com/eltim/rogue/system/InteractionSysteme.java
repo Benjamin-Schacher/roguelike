@@ -22,6 +22,7 @@ public class InteractionSysteme {
     private static map currentMap = null;
     private static List<String> options = new ArrayList<>();
     private static int selection = 0;
+    private static long menuOpenTime = 0;
     // Description courante pour la popup ? (géré par le GameState DESCRIPTION)
     private static String currentDescription = null;
 
@@ -51,6 +52,7 @@ public class InteractionSysteme {
         }
 
         menuOpen = true;
+        menuOpenTime = System.currentTimeMillis();
         menuAttacker = attacker;
         menuTarget = target;
         currentMap = gameMap;
@@ -113,6 +115,10 @@ public class InteractionSysteme {
 
 
     public static void handleMenuInput(KeyEvent key) {
+        if (System.currentTimeMillis() - menuOpenTime < 150) {
+            return;
+        }
+
         if (key.getKeyCode() == KeyEvent.VK_UP) {
             selection--;
             if (selection < 0) selection = options.size() - 1;
@@ -209,6 +215,11 @@ public class InteractionSysteme {
                     com.eltim.rogue.entity.environment.chest c = (com.eltim.rogue.entity.environment.chest) menuTarget;
                     if (!c.isOpen()) {
                         c.setOpen(true);
+                        if (c.isTrapped()) {
+                            int trapDamage = (int)(Math.random() * 6) + 1;
+                            p.setLifePoint(p.getLifePoint() - trapDamage);
+                            ExplorationLog.addDescription("PIÈGE ! Le coffre explose en s'ouvrant (" + trapDamage + " dégâts) !");
+                        }
                         List<item> loot = c.getLoot();
                         if (loot.isEmpty()) {
                             ExplorationLog.addDescription("Le coffre est vide.");

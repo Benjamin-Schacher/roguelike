@@ -7,5 +7,5 @@ public enum potionTypeEnum {
     DEFENSE,
     SPEED,
     AGILITY,
-    
+    BUFF
 }

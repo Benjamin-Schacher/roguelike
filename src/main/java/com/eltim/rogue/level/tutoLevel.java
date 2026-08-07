@@ -23,7 +23,7 @@ public class tutoLevel implements level {
         // M = Groupe de monstres
         // V = Compagnon Valentin
         // L = Coffre
-        // ^ = Sortie
+        // ^ = Sortie vers lvl 1
         // # = Mur
         // | = Mur (barres verticales de couloir)
         // . = zone d'intéraction
@@ -105,9 +105,9 @@ public class tutoLevel implements level {
                         tutorialMap.addEntity(p);
                     } else if (c == '?') {
                         String text = "Description introuvable.";
-                        if (descCounter == 0) text = "Bienvenue dans le tutoriel. Appuyez sur [E] pour ouvrir votre inventaire, [K] pour voir vos compétences.";
-                        else if (descCounter == 1) text = "Cette porte semble vieille et fragile. Vous pouvez essayer de la forcer avec votre Force (D20 + Mod. Force vs DC 14). Attention aux échardes !";
-                        else if (descCounter == 2) text = "Un loup féroce bloque le passage. Ses yeux luisent dans l'obscurité. Préparez-vous au combat !";
+                        if (descCounter == 0) text = "\"Salot de barons ! Il ma tout pris, sauf ma vengeance ! Et je vais allez la lui foutre dans la geule... Tien quesque c'est que ce bruit... ?\" ";
+                        else if (descCounter == 1) text = "Merde c'est quoi ce truc, on dirait que le garde a subit une malédiction. Cette porte semble vieille et fragile, je dois pouvoir la forcer.";
+                        else if (descCounter == 2) text = "Le mort vivant sanble a peine conscient, il ne devrais pas faire long feu !";
                         
                         tutorialMap.addEntity(new com.eltim.rogue.entity.environment.DescriptionMarker(x, y, text));
                         descCounter++;

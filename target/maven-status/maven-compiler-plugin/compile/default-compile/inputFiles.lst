@@ -25,9 +25,12 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\summon\summon.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\weakness.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\base\item.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\attackeTypeEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\chestTypeEnum.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\itemKnowledgeEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\itemQualityTypeEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\itemTypeEnum.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\itemWeightEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\potionEffectEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\potionTypeEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\enumerateur\weaponTypeEnum.java
@@ -35,6 +38,7 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\ItemFactory.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\itemImplementation\equipementImplementation.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\key.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\objectItem.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\potion.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\weapon.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\level.java

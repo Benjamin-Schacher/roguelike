@@ -26,5 +26,9 @@ public enum itemTypeEnum {
     BOW,
     CROSSBOW,
     LONGBOW,
-    SHORT_BOW
+    SHORT_BOW,
+    OBJECT,
+    FOOT,
+    LEGS,
+    NECK
 }

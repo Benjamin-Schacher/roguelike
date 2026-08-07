@@ -180,8 +180,13 @@ public class InventorySystem {
     private static void interactWithItem(int idx) {
         if (idx < 0 || idx >= filteredInventory.size()) return;
         item it = filteredInventory.get(idx);
+        entity activeChar = getActiveCharacter();
 
         if (currentTab == Tab.EQUIPMENT) {
+            if (it != null && activeChar != null && !it.canBeEquippedBy(activeChar)) {
+                showMessage("Statistiques insuffisantes (Force/Sagesse) !");
+                return;
+            }
             if (it instanceof weapon) {
                 weaponToEquip = (weapon) it;
                 isPromptingWeaponSlot = true;
@@ -191,14 +196,11 @@ public class InventorySystem {
             }
         } else if (currentTab == Tab.CONSUMABLES) {
             if (it instanceof com.eltim.rogue.item.potion) {
-                entity activeChar = getActiveCharacter();
                 com.eltim.rogue.item.potion pot = (com.eltim.rogue.item.potion) it;
-                pot.applyEffect(activeChar, null); // Wait, player.useItem does this
-                // actually we can just do:
                 if (activeChar instanceof player) {
                     ((player) activeChar).useItem(it);
                 } else {
-                    pot.applyEffect(activeChar, null);
+                    pot.applyEffect(activeChar);
                     p.getInventory().remove(it);
                 }
                 showMessage(activeChar.getName() + " utilise " + it.getName());

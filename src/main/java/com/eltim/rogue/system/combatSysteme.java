@@ -39,9 +39,12 @@ public class combatSysteme {
     private static boolean isCombatEnding = false;
     private static boolean isVictory = false;
     private static int turnDelayCounter = 0;
+    private static long combatOpenTime = 0;
+    private static boolean itemUsedThisTurn = false;
 
     public static void startCombat(entity player, List<entity> enemies, map gameMap) {
         combatOpen = true;
+        combatOpenTime = System.currentTimeMillis();
         isCombatEnding = false;
         playerEntity = player;
         currentMap = gameMap;
@@ -129,6 +132,7 @@ public class combatSysteme {
 
     public static void handleInput(KeyEvent key) {
         if (!combatOpen) return;
+        if (System.currentTimeMillis() - combatOpenTime < 150) return;
 
         if (isCombatEnding) {
             if (key.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -180,6 +184,7 @@ public class combatSysteme {
         
         boolean isPlayerControlled = allyGroup.contains(currentActor);
         if (isPlayerControlled) {
+            itemUsedThisTurn = false;
             findFirstLivingTarget();
             selection = 0;
         } else {
@@ -316,8 +321,12 @@ public class combatSysteme {
             }
         } 
         else if (action.equals("Utiliser objet")) {
-            if (currentActor instanceof player) {
-                player p = (player) currentActor;
+            if (itemUsedThisTurn) {
+                combatLog.add("> Vous avez déjà utilisé un objet durant ce tour !");
+                return;
+            }
+            if (playerEntity instanceof player) {
+                player p = (player) playerEntity;
                 com.eltim.rogue.item.base.item potionItem = null;
                 for (com.eltim.rogue.item.base.item it : p.getInventory()) {
                     if (it instanceof com.eltim.rogue.item.potion) {
@@ -326,14 +335,18 @@ public class combatSysteme {
                     }
                 }
                 if (potionItem != null) {
-                    p.useItem(potionItem);
-                    combatLog.add("> Utilise une potion.");
+                    potionItem.applyEffect(currentActor);
+                    p.getInventory().remove(potionItem);
+                    itemUsedThisTurn = true;
+                    combatLog.add("> [Objet Groupe] " + currentActor.getName() + " utilise " + potionItem.getName() + " !");
+                    cleanCombatLog();
+                    return; // Le tour ne s'arrête pas : l'action principale peut encore être effectuée !
                 } else {
-                    combatLog.add("> Pas de potion dans l'inventaire !");
-                    currentTurnUsed = false;
+                    combatLog.add("> Pas de potion disponible dans l'inventaire du groupe !");
+                    return;
                 }
             } else {
-                currentTurnUsed = false;
+                return;
             }
         }
 

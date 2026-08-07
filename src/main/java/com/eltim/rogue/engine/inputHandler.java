@@ -29,4 +29,10 @@ public class inputHandler extends KeyAdapter {
     public KeyEvent getInput() {
         return keyQueue.poll();
     }
+
+    public void clear() {
+        keyQueue.clear();
+        heldKeys.clear();
+    }
 }
+

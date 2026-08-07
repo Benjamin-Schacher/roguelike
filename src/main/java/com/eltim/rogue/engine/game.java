@@ -1,10 +1,13 @@
 package com.eltim.rogue.engine;
 
 import com.eltim.rogue.entity.player;
+import com.eltim.rogue.level.level;
 import com.eltim.rogue.level.tutoLevel;
+import com.eltim.rogue.level.Level1;
 import com.eltim.rogue.system.mouvementSysteme;
 import com.eltim.rogue.system.InteractionSysteme;
 import com.eltim.rogue.system.combatSysteme;
+import com.eltim.rogue.system.ExplorationLog;
 import com.eltim.rogue.world.map;
 
 import java.awt.event.KeyEvent;
@@ -24,6 +27,7 @@ public class game {
     private renderer renderer;
     private inputHandler inputHandler;
     
+    private level currentLevel;
     private map currentMap;
     private player player;
     private GameState state;
@@ -87,6 +91,7 @@ public class game {
         player.chooseClass(com.eltim.rogue.system.CharacterCreationSystem.getCharacterClass());
 
         tutoLevel firstLevel = new tutoLevel();
+        currentLevel = firstLevel;
         currentMap = firstLevel.generate(player);
         
         state = GameState.PLAYING;
@@ -105,7 +110,11 @@ public class game {
 
             // IA des ennemis (seulement hors combat, en mode PLAYING)
             if (state == GameState.PLAYING && currentMap != null && !combatSysteme.isCombatOpen()) {
+                boolean wasMenuOpen = InteractionSysteme.isMenuOpen();
                 com.eltim.rogue.system.EnemyAISystem.tick(currentMap, player, frameCount);
+                if (!wasMenuOpen && InteractionSysteme.isMenuOpen()) {
+                    inputHandler.clear();
+                }
                 frameCount++;
             }
 
@@ -198,30 +207,52 @@ public class game {
             case KeyEvent.VK_E:
                 if (state == GameState.PLAYING) {
                     state = GameState.INVENTORY;
+                    inputHandler.clear();
                     com.eltim.rogue.system.InventorySystem.open(player, this);
                 }
                 break;
             case KeyEvent.VK_K:
                 if (state == GameState.PLAYING && player != null && player.classe != null) {
                     state = GameState.SKILL_MENU;
+                    inputHandler.clear();
                     com.eltim.rogue.system.SkillMenuSystem.open(player.classe);
                 }
                 break;
             case KeyEvent.VK_UP:
                 mouvementSysteme.moveEntity(player, 0, -1, currentMap);
-                checkDescriptionTrigger();
+                if (InteractionSysteme.isMenuOpen()) {
+                    inputHandler.clear();
+                } else {
+                    checkDescriptionTrigger();
+                    checkLevelTransition();
+                }
                 break;
             case KeyEvent.VK_DOWN:
                 mouvementSysteme.moveEntity(player, 0, 1, currentMap);
-                checkDescriptionTrigger();
+                if (InteractionSysteme.isMenuOpen()) {
+                    inputHandler.clear();
+                } else {
+                    checkDescriptionTrigger();
+                    checkLevelTransition();
+                }
                 break;
             case KeyEvent.VK_LEFT:
                 mouvementSysteme.moveEntity(player, -1, 0, currentMap);
-                checkDescriptionTrigger();
+                if (InteractionSysteme.isMenuOpen()) {
+                    inputHandler.clear();
+                } else {
+                    checkDescriptionTrigger();
+                    checkLevelTransition();
+                }
                 break;
             case KeyEvent.VK_RIGHT:
                 mouvementSysteme.moveEntity(player, 1, 0, currentMap);
-                checkDescriptionTrigger();
+                if (InteractionSysteme.isMenuOpen()) {
+                    inputHandler.clear();
+                } else {
+                    checkDescriptionTrigger();
+                    checkLevelTransition();
+                }
                 break;
             case KeyEvent.VK_ESCAPE:
                 isRunning = false;
@@ -251,6 +282,38 @@ public class game {
                 lastDescX = px;
                 lastDescY = py;
                 break;
+            }
+        }
+    }
+
+    /** Vérifie si le joueur marche sur une tuile de changement de niveau */
+    private void checkLevelTransition() {
+        if (currentMap == null || player == null) return;
+        int px = player.getX();
+        int py = player.getY();
+
+        if (currentLevel instanceof tutoLevel) {
+            com.eltim.rogue.world.tile currentTile = currentMap.getTile(px, py);
+            if (currentTile != null && currentTile.getSymbol() == '^') {
+                currentMap.removeEntity(player);
+                Level1 nextLevel = new Level1();
+                currentLevel = nextLevel;
+                currentMap = nextLevel.generate(player);
+                player.setX(12);
+                player.setY(31);
+                currentMap.addEntity(player);
+                ExplorationLog.add("Vous franchissez la sortie et entrez dans le Sous-sol de la forteresse !");
+            }
+        } else if (currentLevel instanceof Level1) {
+            if (py == 32 && px >= 9 && px <= 15) {
+                currentMap.removeEntity(player);
+                tutoLevel tuto = new tutoLevel();
+                currentLevel = tuto;
+                currentMap = tuto.generate(player);
+                player.setX(26);
+                player.setY(1);
+                currentMap.addEntity(player);
+                ExplorationLog.add("Vous retournez dans la Prison.");
             }
         }
     }

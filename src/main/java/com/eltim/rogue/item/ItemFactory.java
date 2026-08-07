@@ -21,7 +21,7 @@ public class ItemFactory {
         }
     }
 
-    private static potion generateRandomPotion(itemQualityTypeEnum quality) {
+    public static potion generateRandomPotion(itemQualityTypeEnum quality) {
         potionTypeEnum[] types = potionTypeEnum.values();
         potionTypeEnum selectedType = types[random.nextInt(types.length)];
         
@@ -39,7 +39,7 @@ public class ItemFactory {
         return new potion(name, cost, quality, selectedType);
     }
 
-    private static weapon generateRandomWeapon(itemQualityTypeEnum quality) {
+    public static weapon generateRandomWeapon(itemQualityTypeEnum quality) {
         int diceCount = 1;
         int diceSides = 4;
         String name = "Arme";
