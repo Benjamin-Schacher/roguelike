@@ -1,0 +1,12 @@
+target/
+
+*.class
+
+/src/main/resources/*
+
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.vscode/

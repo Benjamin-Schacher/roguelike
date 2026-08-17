@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Éditeur de Niveaux - Roguelike Java</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --panel-border: #334155;
+      --accent-blue: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-purple: #a855f7;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--panel-border);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border: none;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: none;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #15803d, #166534);
+    }
+
+    .select-input {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      color: var(--accent-blue);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* MAIN CONTAINER */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR PALETTE */
+    .sidebar-left {
+      width: 280px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .tool-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tool-btn {
+      flex: 1;
+      padding: 10px;
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .tool-btn:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .tool-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .tile-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #0f172a;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tile-item:hover {
+      background: #1a2436;
+    }
+
+    .tile-item.active {
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .tile-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .tile-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* CANVAS AREA */
+    .viewport {
+      flex: 1;
+      background: #0b0f19;
+      position: relative;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .canvas-container {
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    canvas {
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* RIGHT SIDEBAR INSPECTOR */
+    .sidebar-right {
+      width: 320px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-control {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-blue);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .dim-control-panel {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dim-inputs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      width: 650px;
+      max-width: 90vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .code-preview {
+      width: 100%;
+      height: 350px;
+      background: #090d16;
+      color: #38bdf8;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      outline: none;
+      white-space: pre;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden File Input for .txt loading -->
+  <input type="file" id="file-picker" accept=".txt" style="display: none;" onchange="handleFileSelect(event)">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">⚔</div>
+      <div>
+        <h1>Éditeur de Niveaux Visual</h1>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">Roguelike Java - Générateur de .txt sans effort</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- LEVEL PRESET SELECTOR -->
+      <select class="select-input" id="level-preset-select" onchange="loadPresetLevel(this.value)">
+        <option value="">📂 Charger un niveau...</option>
+        <option value="tuto">Prison (Tutoriel)</option>
+        <option value="level1">Sous-sol de la forteresse (Niveau 1)</option>
+      </select>
+
+      <button class="btn" onclick="triggerFilePicker()">📁 Ouvrir un .txt</button>
+      <button class="btn" onclick="openNewMapModal()">📄 Nouveau</button>
+      <button class="btn btn-primary" onclick="exportLevel()">💾 Exporter .txt</button>
+    </div>
+  </header>
+
+  <!-- APP BODY -->
+  <div class="app-body">
+
+    <!-- LEFT SIDEBAR: PALETTE -->
+    <div class="sidebar-left">
+      <div>
+        <div class="section-title">Mode de Dessin</div>
+        <div class="tool-group">
+          <button class="tool-btn active" id="tool-pencil" onclick="setDrawMode('pencil')">✏️ Crayon</button>
+          <button class="tool-btn" id="tool-rect" onclick="setDrawMode('rect')">⬜ Rectangle</button>
+          <button class="tool-btn" id="tool-bucket" onclick="setDrawMode('bucket')">🪣 Remplir</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Palette d'Éléments</div>
+        <div class="tile-grid" id="palette-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="openCustomTileModal()">✨ + Créer Tuile Déco</button>
+      </div>
+
+      <div>
+        <div class="section-title">Affichage & Zoom</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" style="flex:1;" onclick="changeGridZoom(1)">🔍 Zoom +</button>
+          <button class="btn" style="flex:1;" onclick="changeGridZoom(-1)">🔍 Zoom -</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEWPORT & CANVAS -->
+    <div class="viewport" id="viewport">
+      <div class="canvas-container">
+        <canvas id="levelCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: PROPERTIES & DIMENSIONS -->
+    <div class="sidebar-right">
+      <div class="section-title">Informations du Niveau</div>
+      
+      <div class="form-group">
+        <label>Nom du Niveau</label>
+        <input type="text" class="form-control" id="level-name" value="Sous-sol de la forteresse" onchange="updateLevelData()">
+      </div>
+
+      <!-- DYNAMIC DIMENSIONS CONTROL -->
+      <div class="section-title" style="margin-top: 4px;">Dimensions de la Carte</div>
+      <div class="dim-control-panel">
+        <div class="dim-inputs">
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Largeur (cases)</label>
+            <input type="number" class="form-control" id="dim-w" value="50" min="5" max="300" oninput="applyResizeFromInputs()">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:0.75rem; color:var(--text-muted);">Hauteur (cases)</label>
+            <input type="number" class="form-control" id="dim-h" value="30" min="5" max="300" oninput="applyResizeFromInputs()">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="applyResizeFromInputs()">📐 Appliquer les Dimensions</button>
+        <span style="font-size:0.75rem; color:var(--text-muted); text-align:center;">Spawn joueur : <strong id="spawn-coords" style="color:var(--accent-blue);">12, 10</strong></span>
+      </div>
+
+      <hr style="border-color: var(--panel-border); margin: 8px 0;">
+
+      <div class="section-title">Configuration des Entités</div>
+
+      <!-- MONSTER CONFIG -->
+      <div class="form-group">
+        <label>👺 Monstre (M)</label>
+        <input type="text" class="form-control" id="cfg-monster-name" value="Garde Squelette" placeholder="Nom" onchange="updateConfig()">
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+          <input type="number" class="form-control" id="cfg-monster-hp" value="15" placeholder="PV" style="flex:1" onchange="updateConfig()">
+          <input type="number" class="form-control" id="cfg-monster-xp" value="25" placeholder="XP" style="flex:1" onchange="updateConfig()">
+          <input type="number" class="form-control" id="cfg-monster-agi" value="12" placeholder="AGI" style="flex:1" onchange="updateConfig()">
+        </div>
+      </div>
+
+      <!-- NPC CONFIG -->
+      <div class="form-group">
+        <label>🧙 Compagnon / PNJ (C / V)</label>
+        <input type="text" class="form-control" id="cfg-npc-name" value="Célestin" placeholder="Nom du PNJ" onchange="updateConfig()">
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+          <input type="number" class="form-control" id="cfg-npc-hp" value="20" placeholder="PV" style="flex:1" onchange="updateConfig()">
+          <input type="number" class="form-control" id="cfg-npc-str" value="14" placeholder="STR" style="flex:1" onchange="updateConfig()">
+          <input type="number" class="form-control" id="cfg-npc-agi" value="10" placeholder="AGI" style="flex:1" onchange="updateConfig()">
+        </div>
+      </div>
+
+      <!-- DESCRIPTION MARKER CONFIG -->
+      <div class="form-group">
+        <label>📜 Description / Indices (£ / ? / w / ù)</label>
+        <textarea class="form-control" id="cfg-desc-text" placeholder="Entrez le texte qui s'affichera au passage du joueur..." onchange="updateConfig()">Des écrits anciens sont gravés sur la roche.</textarea>
+      </div>
+
+      <!-- TRANSITION CONFIG -->
+      <div class="form-group">
+        <label>🚪 Transition / Sortie (^)</label>
+        <input type="text" class="form-control" id="cfg-trans-target" value="levels/level1.txt" placeholder="Fichier cible (ex: levels/level2.txt)" onchange="updateConfig()">
+        <input type="text" class="form-control" id="cfg-trans-spawn" value="12,31" placeholder="Spawn (x,y)" style="margin-top: 4px;" onchange="updateConfig()">
+        <input type="text" class="form-control" id="cfg-trans-msg" value="Vous descendez les marches..." placeholder="Message d'exploration" style="margin-top: 4px;" onchange="updateConfig()">
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT MODAL -->
+  <div class="modal-overlay" id="codeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Fichier .txt Généré</h3>
+        <button class="btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <textarea class="code-preview" id="codeText"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="copyCode()">📋 Copier le texte</button>
+        <button class="btn btn-success" id="modal-action-btn" onclick="downloadCode()">💾 Télécharger .txt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM TILE DECORATION MODAL -->
+  <div class="modal-overlay" id="customTileModal">
+    <div class="modal" style="width: 480px;">
+      <div class="modal-header">
+        <h3>✨ Créer une Tuile Déco Personnalisée</h3>
+        <button class="btn" onclick="closeCustomTileModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Caractère / Symbole (1 seul caractère, ex: ~, *, T, o, =)</label>
+          <input type="text" class="form-control" id="custom-sym" maxlength="1" placeholder="Ex: ~" value="~">
+        </div>
+        <div class="form-group">
+          <label>Nom de la tuile</label>
+          <input type="text" class="form-control" id="custom-name" placeholder="Ex: Rivière / Eau" value="Eau">
+        </div>
+        <div class="form-group">
+          <label>Nature / Comportement de la tuile</label>
+          <select class="form-control" id="custom-chest-type">
+            <option value="NONE">🧱 Décoration Simple (Sol / Mur)</option>
+            <optgroup label="🎁 Coffres Trésors (Comportement Coffre)">
+              <option value="COMMON">Coffre Commun (COMMON)</option>
+              <option value="UNCOMMON">Coffre Inhabituel (UNCOMMON)</option>
+              <option value="RARE">Coffre Rare (RARE)</option>
+              <option value="EPIC">Coffre Épique (EPIC)</option>
+              <option value="LEGENDARY">Coffre Légendaire (LEGENDARY)</option>
+              <option value="TRAPED">Coffre Piégé (TRAPED)</option>
+              <option value="CREST">Reliquaire Sacré (CREST)</option>
+              <option value="ARMORYCHEST">Coffre d'Armurerie (ARMORYCHEST)</option>
+              <option value="MERCHANT">Coffre de Marchand (MERCHANT)</option>
+              <option value="ALCHEMIST">Coffre d'Alchimiste (ALCHEMIST)</option>
+              <option value="SPECIAL">Coffre Spécial (SPECIAL)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Propriété de Déplacement</label>
+          <select class="form-control" id="custom-walkable">
+            <option value="true">🟢 Marchable / Traversable (Sol, Vase, Coffre, Liane...)</option>
+            <option value="false">🔴 Obstacle / Infranchissable (Eau profonde, Arbre, Mur déco...)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Couleur du fond</label>
+          <input type="color" class="form-control" id="custom-color" value="#0284c7" style="height: 40px; padding: 2px; cursor: pointer;">
+        </div>
+        <div class="form-group">
+          <label>Couleur du symbole</label>
+          <input type="color" class="form-control" id="custom-charcolor" value="#ffffff" style="height: 40px; padding: 2px; cursor: pointer;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeCustomTileModal()">Annuler</button>
+        <button class="btn btn-success" onclick="saveCustomTile()">✨ Ajouter à la Palette</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- PRELOADED LEVELS FOR INSTANT EDITING ---
+    const PRESETS = {
+      tuto: `[INFO]\nname = Prison\nspawn = 15,13\n\n[DESCRIPTIONS]\n? = "Salot de barons ! Il ma tout pris, sauf ma vengeance !" | "Merde c'est quoi ce truc..." | "Le mort vivant sanble..."\n\n[MONSTERS]\nM = Loup | HP:10 | XP:15 | AGI:14 | LOOT:Clé rouillée:152\n\n[NPCS]\nV = Valentin | HP:15 | STR:12 | AGI:12\n\n[TRANSITIONS]\n^ = levels/level1.txt | spawn: 12,31 | msg: Vous franchissez la sortie et entrez dans le Sous-sol de la forteresse !\n\n[MAP]\n11111111###############^^^^^^^######################\n11111111#                             #           L#\n11111111#                             X            #\n11111111#                             X            #\n11111111#                             #            #\n################        ############################\n#              |        |              #111111111111\n#              D        D              #111111111111\n#              |        |              #111111111111\n#              |        |              #111111111111\n################  ?M    ################111111111111\n################        ################111111111111\n#   £          |        |              #111111111111\n#   . ?@      ?O        D              #111111111111\n#              |        |              #111111111111\n#              |        |              #111111111111\n################        ################111111111111\n################        ################111111111111\n#              |        |              #111111111111\n#              X        X              #111111111111\n#              |        |      V       #111111111111\n#              |        |              #111111111111\n################        ################111111111111\n11111111#                       #1111111111111111111\n11111111#                      L#1111111111111111111\n11111111#L                      #1111111111111111111\n11111111#      L               L#1111111111111111111\n11111111#########################1111111111111111111`,
+
+      level1: `[INFO]\nname = Sous sol de la forteresse\nspawn = 12,31\n\n[DESCRIPTIONS]\n£ = Des écrits anciens sont gravés sur la roche.\nw = Une rivière souterraine s'écoule rapidement dans les profondeurs.\nù = Le boss Escargot Géant ne doit pas être loin !\nP = Une armure de capitaine fantomatique repose ici.\n\n[MONSTERS]\nM = Garde Squelette | HP:15 | XP:25 | AGI:12\n\n[NPCS]\nC = Célestin | HP:20 | STR:14 | AGI:10\n\n[TRANSITIONS]\n<tuto-> = levels/tuto.txt | spawn: 26,1 | msg: Vous retournez dans la Prison.\n\n[MAP]\n111#^^^^^^^#ssssssssssssss#######################sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       #ssssssssssssss#  $               $  #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       #ssssssssssssss#     #    M    #     #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       #ssssssssssssss#          MM         #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       ################     #         #     #####################sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#                                                    X           #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#                                                    X           #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       #########D##########D#############################       #sssss##########################sssss#########################\n111#       #ss1s#       #ss#       #ssssssssssssssssssssssss#       #sssss#                        #sssss#       (o)        (o)  #\n111#       #ss1s#L   P  #ss#       #ssssssssssssssssssssssss#       #sssss#  .[_].   .[_].   .[_]. #sssss#   (o)  (o) (o)        #\n111#       #ss1s#########ss#e#######sssssss##################       #sssss#      .[_].   .[_].     #sssss#                       #\n111#       #ss1sssssssssssss#ssssssssssssss#   #%%%%%%%%%%#         #sssss#  .[_].   .[_].   .[_]. #sssss#  (o)               (o)#\n111#       #######################ss11######L              M        #sssss#C     .[_].   .[_].     #sssss#           8=@     (o) #\n111#6               . ..         #s111#%%%%#   #%%%%%%%%%%# M       #sssss#  .[_].   .[_].   .[_]. #sssss#   (o)                 #\n111#o=               o.O-=     w/#s1ss#L   D                        #sssss#      .[_].   .[_].     #sssss# (o)        (o)     (o)#\n111#/      M      .. . .  .   w|.#s111#%%%%#   #%%%%%%%%%%#         #sssss#                        #sssss#    (o)            (o) #\n111#6      M       . .. .     w|.#1111######L                       ###################D##############################D###########\n111#o=           .  .[_].     w|.#s1111ssss#LL #%%%%%%%%%%#                                                           ù          #\n111#/                ..  .     w6#s1111ssss##################                      M                                             #\n111#                             #s1111sssssssssssssssssssss#       ##############################################################\n111#       #######################11111############sssssssss#       #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#      L#111111111111111111111111111#   $$     #ssss11sss#       #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#  M    #ssss###1###1###1###1###1111#         $#sss111sss#       #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#       #ssss# #s# #1#M#1# #1# #ss11#L         #sss111sss#£££££££#sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#L      ######_###_###_###_###D##########XX###############       #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#                                           £X   M   M           #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111#                    M                      £X    M M MM         #sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n111######       #####################################    ############sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n11111111#       #11111111111111111111111111111111111#    #11111111111sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n11111111#       #11111111111111111111111111111111111#    #11111111111sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n11111111#L      #11111111111111111111111111111111111#^^^^#11111111111sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n11111111#       #1111111111111111111111111111111111111111111111111111sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n11111111#<tuto->#1111111111111111sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss`
+    };
+
+    // --- TILE PALETTE DEFINITION ---
+    let TILES = [
+      { sym: '#', name: 'Mur', color: '#475569', charColor: '#cbd5e1', walkable: false },
+      { sym: ' ', name: 'Sol', color: '#1e293b', charColor: '#475569', walkable: true },
+      { sym: '1', name: 'Vide / Hors Map', color: '#090d16', charColor: '#1e293b', walkable: true },
+      { sym: '@', name: 'Joueur Spawn', color: '#0284c7', charColor: '#ffffff', walkable: true },
+      { sym: 'D', name: 'Porte Normale', color: '#b45309', charColor: '#fef08a', walkable: true },
+      { sym: 'X', name: 'Porte Verrouillée', color: '#dc2626', charColor: '#fef08a', walkable: true },
+      { sym: 'O', name: 'Vieille Porte', color: '#78350f', charColor: '#d97706', walkable: true },
+
+      // --- COFFRES DE TOUTES RARETÉS ET TYPES ---
+      { sym: 'L', name: 'Coffre Commun', color: '#d97706', charColor: '#ffffff', walkable: true, chestType: 'COMMON' },
+      { sym: 'U', name: 'Coffre Inhabituel', color: '#16a34a', charColor: '#ffffff', walkable: true, chestType: 'UNCOMMON' },
+      { sym: '$', name: 'Coffre Rare', color: '#eab308', charColor: '#000000', walkable: true, chestType: 'RARE' },
+      { sym: 'E', name: 'Coffre Épique', color: '#a855f7', charColor: '#ffffff', walkable: true, chestType: 'EPIC' },
+      { sym: 'G', name: 'Coffre Légendaire', color: '#ea580c', charColor: '#ffffff', walkable: true, chestType: 'LEGENDARY' },
+      { sym: 'T', name: 'Coffre Piégé', color: '#991b1b', charColor: '#ffffff', walkable: true, chestType: 'TRAPED' },
+      { sym: 'B', name: 'Reliquaire Sacré', color: '#06b6d4', charColor: '#ffffff', walkable: true, chestType: 'CREST' },
+      { sym: 'A', name: 'Coffre Armurerie', color: '#64748b', charColor: '#ffffff', walkable: true, chestType: 'ARMORYCHEST' },
+      { sym: 'R', name: 'Coffre Marchand', color: '#10b981', charColor: '#ffffff', walkable: true, chestType: 'MERCHANT' },
+      { sym: 'Z', name: 'Coffre Alchimiste', color: '#ec4899', charColor: '#ffffff', walkable: true, chestType: 'ALCHEMIST' },
+      { sym: 'S', name: 'Coffre Spécial', color: '#3b82f6', charColor: '#ffffff', walkable: true, chestType: 'SPECIAL' },
+
+      { sym: '^', name: 'Sortie / Escalier', color: '#16a34a', charColor: '#ffffff', walkable: true },
+      { sym: 'M', name: 'Monstre', color: '#991b1b', charColor: '#fca5a5', walkable: true },
+      { sym: 'C', name: 'Compagnon PNJ', color: '#6b21a8', charColor: '#f3e8ff', walkable: true },
+      { sym: '£', name: 'Texte / Description', color: '#0284c7', charColor: '#e0f2fe', walkable: true },
+    ];
+
+    // --- STATE ---
+    let width = 50;
+    let height = 30;
+    let tileSize = 16;
+    let grid = [];
+    let activeTile = '#';
+    let drawMode = 'pencil'; // 'pencil', 'rect', 'bucket'
+    let isMouseDown = false;
+    let rectStart = null;
+    let currentHoverPos = { x: -1, y: -1 };
+
+    let levelInfo = {
+      name: "Sous-sol de la forteresse",
+      spawnX: 12,
+      spawnY: 10,
+      monster: { name: "Garde Squelette", hp: 15, xp: 25, agi: 12 },
+      npc: { name: "Célestin", hp: 20, str: 14, agi: 10 },
+      descText: "Des écrits anciens sont gravés sur la roche.",
+      transition: { target: "levels/level1.txt", spawn: "12,31", msg: "Vous descendez les marches..." }
+    };
+
+    const canvas = document.getElementById('levelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- INIT ---
+    function init() {
+      buildPalette();
+      initGrid(width, height);
+      setupEventListeners();
+      render();
+    }
+
+    function buildPalette() {
+      const container = document.getElementById('palette-grid');
+      container.innerHTML = '';
+      TILES.forEach(t => {
+        const item = document.createElement('div');
+        item.className = `tile-item ${t.sym === activeTile ? 'active' : ''}`;
+        item.onclick = () => selectTile(t.sym);
+        const walkableBadge = t.isCustom ? (t.walkable ? ' 🟢' : ' 🔴') : '';
+        item.innerHTML = `
+          <div class="tile-badge" style="background: ${t.color}; color: ${t.charColor};">${t.sym === ' ' ? '␣' : t.sym}</div>
+          <div class="tile-label">${t.name}${walkableBadge}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function selectTile(sym) {
+      activeTile = sym;
+      buildPalette();
+    }
+
+    function setDrawMode(mode) {
+      drawMode = mode;
+      document.querySelectorAll('.tool-group .tool-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tool-${mode}`).classList.add('active');
+    }
+
+    function initGrid(w, h) {
+      width = w;
+      height = h;
+      grid = Array(height).fill(null).map(() => Array(width).fill('#'));
+      
+      for (let y = 2; y < height - 2; y++) {
+        for (let x = 2; x < width - 2; x++) {
+          grid[y][x] = ' ';
+        }
+      }
+      grid[Math.min(levelInfo.spawnY, height-1)][Math.min(levelInfo.spawnX, width-1)] = '@';
+      updateDimensionInputs();
+      resizeCanvas();
+    }
+
+    // --- SAFELY RESIZE GRID IN REALTIME ---
+    function resizeGrid(newW, newH) {
+      newW = Math.max(5, Math.min(300, parseInt(newW) || 10));
+      newH = Math.max(5, Math.min(300, parseInt(newH) || 10));
+
+      const newGrid = [];
+      for (let y = 0; y < newH; y++) {
+        const row = [];
+        for (let x = 0; x < newW; x++) {
+          if (y < grid.length && x < grid[y].length) {
+            row.push(grid[y][x]);
+          } else {
+            row.push(' ');
+          }
+        }
+        newGrid.push(row);
+      }
+
+      grid = newGrid;
+      width = newW;
+      height = newH;
+      updateDimensionInputs();
+      resizeCanvas();
+    }
+
+    function applyResizeFromInputs() {
+      const nw = parseInt(document.getElementById('dim-w').value);
+      const nh = parseInt(document.getElementById('dim-h').value);
+      if (nw && nh && (nw !== width || nh !== height)) {
+        resizeGrid(nw, nh);
+      }
+    }
+
+    function updateDimensionInputs() {
+      document.getElementById('dim-w').value = width;
+      document.getElementById('dim-h').value = height;
+      document.getElementById('spawn-coords').innerText = `${levelInfo.spawnX}, ${levelInfo.spawnY}`;
+    }
+
+    function resizeCanvas() {
+      canvas.width = width * tileSize;
+      canvas.height = height * tileSize;
+      render();
+    }
+
+    function changeGridZoom(delta) {
+      tileSize = Math.max(8, Math.min(48, tileSize + delta * 2));
+      resizeCanvas();
+    }
+
+    // --- RENDER ---
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const sym = grid[y][x] || ' ';
+          const tileDef = TILES.find(t => t.sym === sym) || { color: '#0f172a', charColor: '#38bdf8' };
+
+          // Fill Tile Background
+          ctx.fillStyle = tileDef.color;
+          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+          // Draw Grid Line
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+          ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+          // Draw Character Icon
+          if (sym !== '#' && sym !== ' ' && sym !== '1') {
+            ctx.fillStyle = tileDef.charColor;
+            ctx.font = `600 ${Math.max(8, Math.floor(tileSize * 0.65))}px 'Fira Code', monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(sym, (x + 0.5) * tileSize, (y + 0.5) * tileSize);
+          }
+        }
+      }
+
+      // Draw Rectangle Preview
+      if (drawMode === 'rect' && isMouseDown && rectStart && currentHoverPos.x >= 0) {
+        const x1 = Math.min(rectStart.x, currentHoverPos.x);
+        const y1 = Math.min(rectStart.y, currentHoverPos.y);
+        const x2 = Math.max(rectStart.x, currentHoverPos.x);
+        const y2 = Math.max(rectStart.y, currentHoverPos.y);
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x1 * tileSize, y1 * tileSize, (x2 - x1 + 1) * tileSize, (y2 - y1 + 1) * tileSize);
+      }
+    }
+
+    // --- EVENT LISTENERS ---
+    function setupEventListeners() {
+      canvas.addEventListener('mousedown', (e) => {
+        isMouseDown = true;
+        const pos = getGridPos(e);
+        rectStart = pos;
+
+        if (drawMode === 'pencil') {
+          applyTile(pos.x, pos.y);
+        } else if (drawMode === 'bucket') {
+          floodFill(pos.x, pos.y, grid[pos.y][pos.x], activeTile);
+          render();
+        }
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        const pos = getGridPos(e);
+        currentHoverPos = pos;
+
+        if (isMouseDown && drawMode === 'pencil') {
+          applyTile(pos.x, pos.y);
+        } else {
+          render();
+        }
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (isMouseDown && drawMode === 'rect' && rectStart && currentHoverPos.x >= 0) {
+          const x1 = Math.min(rectStart.x, currentHoverPos.x);
+          const y1 = Math.min(rectStart.y, currentHoverPos.y);
+          const x2 = Math.max(rectStart.x, currentHoverPos.x);
+          const y2 = Math.max(rectStart.y, currentHoverPos.y);
+
+          for (let y = y1; y <= y2; y++) {
+            for (let x = x1; x <= x2; x++) {
+              if (y < height && x < width) {
+                grid[y][x] = activeTile;
+              }
+            }
+          }
+          render();
+        }
+        isMouseDown = false;
+        rectStart = null;
+      });
+    }
+
+    function getGridPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / tileSize);
+      const y = Math.floor((e.clientY - rect.top) / tileSize);
+      return {
+        x: Math.max(0, Math.min(width - 1, x)),
+        y: Math.max(0, Math.min(height - 1, y))
+      };
+    }
+
+    function applyTile(x, y) {
+      if (activeTile === '@') {
+        for (let ry = 0; ry < height; ry++) {
+          for (let rx = 0; rx < width; rx++) {
+            if (grid[ry][rx] === '@') grid[ry][rx] = ' ';
+          }
+        }
+        levelInfo.spawnX = x;
+        levelInfo.spawnY = y;
+        document.getElementById('spawn-coords').innerText = `${x}, ${y}`;
+      }
+      if (y < height && x < width) {
+        grid[y][x] = activeTile;
+      }
+      render();
+    }
+
+    function floodFill(x, y, targetSym, replacementSym) {
+      if (targetSym === replacementSym) return;
+      if (y < 0 || y >= height || x < 0 || x >= width) return;
+      if (grid[y][x] !== targetSym) return;
+
+      grid[y][x] = replacementSym;
+
+      floodFill(x - 1, y, targetSym, replacementSym);
+      floodFill(x + 1, y, targetSym, replacementSym);
+      floodFill(x, y - 1, targetSym, replacementSym);
+      floodFill(x, y + 1, targetSym, replacementSym);
+    }
+
+    // --- FORM DATA UPDATE ---
+    function updateLevelData() {
+      levelInfo.name = document.getElementById('level-name').value;
+    }
+
+    function updateConfig() {
+      levelInfo.monster.name = document.getElementById('cfg-monster-name').value;
+      levelInfo.monster.hp = document.getElementById('cfg-monster-hp').value;
+      levelInfo.monster.xp = document.getElementById('cfg-monster-xp').value;
+      levelInfo.monster.agi = document.getElementById('cfg-monster-agi').value;
+
+      levelInfo.npc.name = document.getElementById('cfg-npc-name').value;
+      levelInfo.npc.hp = document.getElementById('cfg-npc-hp').value;
+      levelInfo.npc.str = document.getElementById('cfg-npc-str').value;
+      levelInfo.npc.agi = document.getElementById('cfg-npc-agi').value;
+
+      levelInfo.descText = document.getElementById('cfg-desc-text').value;
+
+      levelInfo.transition.target = document.getElementById('cfg-trans-target').value;
+      levelInfo.transition.spawn = document.getElementById('cfg-trans-spawn').value;
+      levelInfo.transition.msg = document.getElementById('cfg-trans-msg').value;
+    }
+
+    // --- CUSTOM DECORATION TILE CREATION ---
+    function openCustomTileModal() {
+      document.getElementById('customTileModal').classList.add('open');
+    }
+
+    function closeCustomTileModal() {
+      document.getElementById('customTileModal').classList.remove('open');
+    }
+
+    function saveCustomTile() {
+      const sym = document.getElementById('custom-sym').value.trim();
+      const name = document.getElementById('custom-name').value.trim();
+      const walkable = document.getElementById('custom-walkable').value === 'true';
+      const chestType = document.getElementById('custom-chest-type').value;
+      const color = document.getElementById('custom-color').value;
+      const charColor = document.getElementById('custom-charcolor').value;
+
+      if (!sym) {
+        alert("Veuillez saisir un caractère de symbole !");
+        return;
+      }
+
+      let defaultName = (chestType !== 'NONE') ? `Coffre ${chestType} (${sym})` : "Déco " + sym;
+
+      let existing = TILES.find(t => t.sym === sym);
+      if (existing) {
+        existing.name = name || defaultName;
+        existing.color = color;
+        existing.charColor = charColor;
+        existing.walkable = walkable;
+        existing.isCustom = true;
+        if (chestType !== 'NONE') existing.chestType = chestType;
+        else delete existing.chestType;
+      } else {
+        const tileObj = {
+          sym: sym,
+          name: name || defaultName,
+          color: color,
+          charColor: charColor,
+          walkable: walkable,
+          isCustom: true
+        };
+        if (chestType !== 'NONE') tileObj.chestType = chestType;
+        TILES.push(tileObj);
+      }
+
+      buildPalette();
+      selectTile(sym);
+      closeCustomTileModal();
+    }
+
+    // --- IMPORT / LOAD LEVEL ---
+    function loadPresetLevel(key) {
+      if (PRESETS[key]) {
+        parseAndLoadTxt(PRESETS[key]);
+      }
+    }
+
+    function triggerFilePicker() {
+      document.getElementById('file-picker').click();
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        parseAndLoadTxt(e.target.result);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseAndLoadTxt(content) {
+      const cleanContent = content.replace(/\r/g, '');
+      const lines = cleanContent.split('\n');
+      let currentSection = '';
+      let mapRows = [];
+
+      lines.forEach(rawLine => {
+        const line = rawLine.trim();
+        if (line.startsWith('[') && line.endsWith(']')) {
+          currentSection = line.substring(1, line.length - 1).toUpperCase();
+          return;
+        }
+
+        switch (currentSection) {
+          case 'INFO':
+            if (line.includes('=')) {
+              const [k, v] = line.split('=').map(s => s.trim());
+              if (k === 'name') levelInfo.name = v;
+              if (k === 'spawn') {
+                const [sx, sy] = v.split(',').map(s => parseInt(s.trim()));
+                if (!isNaN(sx) && !isNaN(sy)) {
+                  levelInfo.spawnX = sx;
+                  levelInfo.spawnY = sy;
+                }
+              }
+            }
+            break;
+
+          case 'DESCRIPTIONS':
+            if (line.includes('=')) {
+              const [, v] = line.split('=').map(s => s.trim());
+              levelInfo.descText = v.replace(/^"|"$/g, '');
+            }
+            break;
+
+          case 'MONSTERS':
+            if (line.includes('=')) {
+              const [, config] = line.split('=').map(s => s.trim());
+              const parts = config.split('|').map(s => s.trim());
+              if (parts[0]) levelInfo.monster.name = parts[0];
+              parts.forEach(p => {
+                if (p.startsWith('HP:')) levelInfo.monster.hp = p.substring(3).trim();
+                if (p.startsWith('XP:')) levelInfo.monster.xp = p.substring(3).trim();
+                if (p.startsWith('AGI:')) levelInfo.monster.agi = p.substring(4).trim();
+              });
+            }
+            break;
+
+          case 'NPCS':
+            if (line.includes('=')) {
+              const [, config] = line.split('=').map(s => s.trim());
+              const parts = config.split('|').map(s => s.trim());
+              if (parts[0]) levelInfo.npc.name = parts[0];
+              parts.forEach(p => {
+                if (p.startsWith('HP:')) levelInfo.npc.hp = p.substring(3).trim();
+                if (p.startsWith('STR:')) levelInfo.npc.str = p.substring(4).trim();
+                if (p.startsWith('AGI:')) levelInfo.npc.agi = p.substring(4).trim();
+              });
+            }
+            break;
+
+          case 'TRANSITIONS':
+            if (line.includes('=')) {
+              const [, config] = line.split('=').map(s => s.trim());
+              const parts = config.split('|').map(s => s.trim());
+              if (parts[0]) levelInfo.transition.target = parts[0];
+              parts.forEach(p => {
+                if (p.startsWith('spawn:')) levelInfo.transition.spawn = p.substring(6).trim();
+                if (p.startsWith('msg:')) levelInfo.transition.msg = p.substring(4).trim();
+              });
+            }
+            break;
+
+          case 'DECORATIONS':
+            if (line.includes('=')) {
+              const [symStr, configStr] = line.split('=').map(s => s.trim());
+              const sym = symStr.charAt(0);
+              let tileName = "Déco " + sym;
+              let isWalkable = true;
+              let color = "#0284c7";
+              let charColor = "#ffffff";
+
+              const parts = configStr.split('|').map(s => s.trim());
+              parts.forEach(p => {
+                if (p.toLowerCase().startsWith('walkable:')) {
+                  isWalkable = p.substring(9).trim().toLowerCase() !== 'false';
+                } else if (p.toLowerCase().startsWith('name:')) {
+                  tileName = p.substring(5).trim();
+                } else if (p.toLowerCase().startsWith('color:')) {
+                  color = p.substring(6).trim();
+                } else if (p.toLowerCase().startsWith('charcolor:')) {
+                  charColor = p.substring(10).trim();
+                } else if (p.toLowerCase() === 'solid' || p.toLowerCase() === 'false') {
+                  isWalkable = false;
+                }
+              });
+
+              let existing = TILES.find(t => t.sym === sym);
+              if (existing) {
+                existing.name = tileName;
+                existing.walkable = isWalkable;
+                existing.color = color;
+                existing.charColor = charColor;
+                existing.isCustom = true;
+              } else {
+                TILES.push({
+                  sym: sym,
+                  name: tileName,
+                  color: color,
+                  charColor: charColor,
+                  walkable: isWalkable,
+                  isCustom: true
+                });
+              }
+            }
+            break;
+
+          case 'CHESTS':
+            if (line.includes('=')) {
+              const [symStr, typeStr] = line.split('=').map(s => s.trim());
+              const sym = symStr.charAt(0);
+              const chestType = typeStr.toUpperCase();
+              let existing = TILES.find(t => t.sym === sym);
+              if (existing) {
+                existing.chestType = chestType;
+              }
+            }
+            break;
+
+          case 'MAP':
+            mapRows.push(rawLine);
+            break;
+        }
+      });
+
+      // Remove trailing blank lines from map
+      while (mapRows.length > 0 && mapRows[mapRows.length - 1].length === 0) {
+        mapRows.pop();
+      }
+
+      if (mapRows.length > 0) {
+        const loadedH = mapRows.length;
+        const loadedW = Math.max(...mapRows.map(r => r.length));
+
+        grid = Array(loadedH).fill(null).map(() => Array(loadedW).fill(' '));
+
+        for (let y = 0; y < loadedH; y++) {
+          for (let x = 0; x < loadedW; x++) {
+            grid[y][x] = x < mapRows[y].length ? mapRows[y][x] : ' ';
+          }
+        }
+
+        width = loadedW;
+        height = loadedH;
+
+        if (width > 80) tileSize = 10;
+        else if (width > 50) tileSize = 14;
+        else tileSize = 20;
+
+        // Fill form fields
+        document.getElementById('level-name').value = levelInfo.name;
+        document.getElementById('cfg-monster-name').value = levelInfo.monster.name;
+        document.getElementById('cfg-monster-hp').value = levelInfo.monster.hp;
+        document.getElementById('cfg-monster-xp').value = levelInfo.monster.xp;
+        document.getElementById('cfg-monster-agi').value = levelInfo.monster.agi;
+
+        document.getElementById('cfg-npc-name').value = levelInfo.npc.name;
+        document.getElementById('cfg-npc-hp').value = levelInfo.npc.hp;
+        document.getElementById('cfg-npc-str').value = levelInfo.npc.str;
+        document.getElementById('cfg-npc-agi').value = levelInfo.npc.agi;
+
+        document.getElementById('cfg-desc-text').value = levelInfo.descText;
+
+        document.getElementById('cfg-trans-target').value = levelInfo.transition.target;
+        document.getElementById('cfg-trans-spawn').value = levelInfo.transition.spawn;
+        document.getElementById('cfg-trans-msg').value = levelInfo.transition.msg;
+
+        buildPalette();
+        updateDimensionInputs();
+        resizeCanvas();
+      }
+    }
+
+    // --- EXPORT LEVEL TO .TXT ---
+    function exportLevel() {
+      updateLevelData();
+      updateConfig();
+
+      let txt = `[INFO]\nname = ${levelInfo.name}\nspawn = ${levelInfo.spawnX},${levelInfo.spawnY}\n\n`;
+
+      txt += `[DESCRIPTIONS]\n£ = "${levelInfo.descText}"\n\n`;
+
+      txt += `[MONSTERS]\nM = ${levelInfo.monster.name} | HP:${levelInfo.monster.hp} | XP:${levelInfo.monster.xp} | AGI:${levelInfo.monster.agi}\n\n`;
+
+      txt += `[NPCS]\nC = ${levelInfo.npc.name} | HP:${levelInfo.npc.hp} | STR:${levelInfo.npc.str} | AGI:${levelInfo.npc.agi}\n\n`;
+
+      txt += `[TRANSITIONS]\n^ = ${levelInfo.transition.target} | spawn: ${levelInfo.transition.spawn} | msg: ${levelInfo.transition.msg}\n\n`;
+
+      // Export custom decoration tiles
+      const customTiles = TILES.filter(t => t.isCustom);
+      if (customTiles.length > 0) {
+        txt += `[DECORATIONS]\n`;
+        customTiles.forEach(t => {
+          txt += `${t.sym} = walkable:${t.walkable} | name:${t.name} | color:${t.color} | charcolor:${t.charColor}\n`;
+        });
+        txt += `\n`;
+      }
+
+      // Export custom chest tile mappings
+      const customChests = TILES.filter(t => t.chestType && !['L','U','$','E','G','T','B','A','R','Z','S'].includes(t.sym));
+      if (customChests.length > 0) {
+        txt += `[CHESTS]\n`;
+        customChests.forEach(t => {
+          txt += `${t.sym} = ${t.chestType}\n`;
+        });
+        txt += `\n`;
+      }
+
+      txt += `[MAP]\n`;
+      for (let y = 0; y < height; y++) {
+        txt += grid[y].join('') + '\n';
+      }
+
+      document.getElementById('modal-title').innerText = "Fichier .txt Généré";
+      document.getElementById('codeText').value = txt;
+      document.getElementById('codeModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('codeModal').classList.remove('open');
+    }
+
+    function copyCode() {
+      const textarea = document.getElementById('codeText');
+      textarea.select();
+      document.execCommand('copy');
+      alert('Contenu copié dans le presse-papier !');
+    }
+
+    function downloadCode() {
+      const txt = document.getElementById('codeText').value;
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (levelInfo.name || 'level').toLowerCase().replace(/[^a-z0-9]/g, '_') + '.txt';
+      a.click();
+    }
+
+    function openNewMapModal() {
+      const w = prompt("Largeur de la carte (en nombre de cases) :", "45");
+      const h = prompt("Hauteur de la carte (en nombre de cases) :", "25");
+      if (w && h) {
+        initGrid(parseInt(w), parseInt(h));
+      }
+    }
+
+    // Launch
+    window.onload = init;
+  </script>
+</body>
+</html>

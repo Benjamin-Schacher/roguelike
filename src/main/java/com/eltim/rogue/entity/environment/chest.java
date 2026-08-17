@@ -18,8 +18,8 @@ public class chest extends entity {
     private chestTypeEnum quality;
     private boolean hasGeneratedLoot;
 
-    public chest(int x, int y, boolean randomLoot, chestTypeEnum quality) {
-        super(x, y, 'L');
+    public chest(int x, int y, char symbol, boolean randomLoot, chestTypeEnum quality) {
+        super(x, y, symbol);
         this.loot = new ArrayList<>();
         this.randomLoot = randomLoot;
         this.quality = quality;
@@ -40,6 +40,10 @@ public class chest extends entity {
             case COMMON:
             default: this.setName("Coffre Commun"); break;
         }
+    }
+
+    public chest(int x, int y, boolean randomLoot, chestTypeEnum quality) {
+        this(x, y, 'L', randomLoot, quality);
     }
 
     /** Constructeur pour coffre spécial avec loot fixe/précis */

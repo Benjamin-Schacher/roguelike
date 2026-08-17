@@ -13,7 +13,9 @@ import com.eltim.rogue.world.map;
 
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class InteractionSysteme {
     private static boolean menuOpen = false;
@@ -51,6 +53,11 @@ public class InteractionSysteme {
             target = temp;
         }
 
+        // Si le menu est déjà ouvert sur la même cible, ne PAS réinitialiser selection à 0
+        if (menuOpen && menuTarget == target) {
+            return;
+        }
+
         menuOpen = true;
         menuOpenTime = System.currentTimeMillis();
         menuAttacker = attacker;
@@ -58,6 +65,8 @@ public class InteractionSysteme {
         currentMap = gameMap;
         selection = 0;
         options.clear();
+
+        com.eltim.rogue.engine.inputHandler.clearInput();
 
         
         String targetClass = target.getClass().getSimpleName().toLowerCase();
@@ -96,6 +105,11 @@ public class InteractionSysteme {
             options.add("Combattre");
             options.add("Utiliser un objet");
             options.add("Quitter");
+        } else if (target instanceof com.eltim.rogue.entity.environment.InteractionTile) {
+            com.eltim.rogue.entity.environment.InteractionTile it = (com.eltim.rogue.entity.environment.InteractionTile) target;
+            options.add(it.getActionName());
+            options.add("Examiner");
+            options.add("Quitter");
         } else {
             options.add("Fermer");
         }
@@ -115,9 +129,8 @@ public class InteractionSysteme {
 
 
     public static void handleMenuInput(KeyEvent key) {
-        if (System.currentTimeMillis() - menuOpenTime < 150) {
-            return;
-        }
+        long now = System.currentTimeMillis();
+        long elapsed = now - menuOpenTime;
 
         if (key.getKeyCode() == KeyEvent.VK_UP) {
             selection--;
@@ -126,26 +139,16 @@ public class InteractionSysteme {
             selection++;
             if (selection >= options.size()) selection = 0;
         } else if (key.getKeyCode() == KeyEvent.VK_ENTER) {
+            if (elapsed < 200) {
+                return; // Ignorer l'appui sur Entrée s'il survient trop rapidement après l'ouverture du menu
+            }
             String action = options.get(selection);
             System.out.println("Action choisie : " + action);
             
             menuOpen = false;
             
-            if (action.equals("Combattre")) {
-                List<entity> enemies = new ArrayList<>();
-                enemies.add(menuTarget);
-                
-                // Regroupe les monstres proches (distance de Manhattan <= 3)
-                if (currentMap != null) {
-                    for (entity e : currentMap.getEntities()) {
-                        if (e instanceof monster && e != menuTarget && !enemies.contains(e)) {
-                            int dist = Math.abs(e.getX() - menuTarget.getX()) + Math.abs(e.getY() - menuTarget.getY());
-                            if (dist <= 3 && enemies.size() < 6) {
-                                enemies.add(e);
-                            }
-                        }
-                    }
-                }
+            if (action.equals("Combattre") || action.equals("Utiliser un objet")) {
+                List<entity> enemies = findMonsterGroup(menuAttacker, menuTarget, currentMap);
                 combatSysteme.startCombat(menuAttacker, enemies, currentMap);
             } else if (action.equals("Recruter")) {
                 if (menuAttacker instanceof player && menuTarget instanceof npc) {
@@ -161,7 +164,8 @@ public class InteractionSysteme {
                 door d = (door) menuTarget;
                 if (d.getState() == doorStateEnum.NORMAL || d.getState() == doorStateEnum.OLD) {
                     d.setState(doorStateEnum.OPEN);
-                    d.setSymbol('D'); // reste 'D' mais sera vert
+                    d.setSymbol('D');
+                    com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
                     System.out.println("La porte s'ouvre.");
                 } else {
                     System.out.println("La porte est verrouillée !");
@@ -183,6 +187,7 @@ public class InteractionSysteme {
                             p.getInventory().remove(foundKey);
                             d.setState(doorStateEnum.OPEN);
                             d.setSymbol('D');
+                            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
                             System.out.println("Vous utilisez la clé. La porte s'ouvre !");
                         } else {
                             System.out.println("Vous n'avez pas la bonne clé !");
@@ -202,8 +207,8 @@ public class InteractionSysteme {
                         door d = (door) menuTarget;
                         d.setState(doorStateEnum.OPEN);
                         d.setSymbol('D');
+                        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
                     } else {
-                        // Échec : perte de 1d4 PV
                         int damage = (int)(Math.random() * 4) + 1;
                         p.setLifePoint(p.getLifePoint() - damage);
                         ExplorationLog.add("  ↳ Blessé de " + damage + " PV");
@@ -215,9 +220,11 @@ public class InteractionSysteme {
                     com.eltim.rogue.entity.environment.chest c = (com.eltim.rogue.entity.environment.chest) menuTarget;
                     if (!c.isOpen()) {
                         c.setOpen(true);
+                        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("chest_open");
                         if (c.isTrapped()) {
                             int trapDamage = (int)(Math.random() * 6) + 1;
                             p.setLifePoint(p.getLifePoint() - trapDamage);
+                            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("trap");
                             ExplorationLog.addDescription("PIÈGE ! Le coffre explose en s'ouvrant (" + trapDamage + " dégâts) !");
                         }
                         List<item> loot = c.getLoot();
@@ -232,6 +239,34 @@ public class InteractionSysteme {
                         }
                     } else {
                         ExplorationLog.addDescription("Ce coffre a déjà été vidé.");
+                    }
+                }
+            } else if (menuTarget instanceof com.eltim.rogue.entity.environment.InteractionTile) {
+                com.eltim.rogue.entity.environment.InteractionTile it = (com.eltim.rogue.entity.environment.InteractionTile) menuTarget;
+                if (action.equalsIgnoreCase("Examiner")) {
+                    ExplorationLog.addDescription("Un ancien autel à la gloire de Karin, dieu des voleurs.");
+                } else if (!action.equalsIgnoreCase("Quitter") && !action.equalsIgnoreCase("Partir")) {
+                    if (menuAttacker instanceof player) {
+                        player p = (player) menuAttacker;
+                        String text = (it.getActionName() + " " + it.getSecretEffectText()).toLowerCase();
+                        if (text.contains("karin")) {
+                            if (p.getBelief() == com.eltim.rogue.entity.base.Belief.KARIN) {
+                                if (currentMap != null) {
+                                    for (entity e : currentMap.getEntities()) {
+                                        if (e instanceof door) {
+                                            door d = (door) e;
+                                            d.setState(doorStateEnum.OPEN);
+                                            d.setSymbol('D');
+                                        }
+                                    }
+                                }
+                                ExplorationLog.addDescription("Succès : Le gond de la porte lâche, usé par la vieillesse ! La porte s'ouvre !");
+                            } else {
+                                ExplorationLog.addDescription("Échec : Vous priez Karin, mais vous n'êtes pas son fidèle. Rien ne se passe.");
+                            }
+                        } else {
+                            ExplorationLog.addDescription("Interaction réalisée.");
+                        }
                     }
                 }
             } else if (action.equals("Fermer") || action.equals("Partir") || action.equals("Quitter")) {
@@ -251,4 +286,66 @@ public class InteractionSysteme {
     public static entity getTarget() { return menuTarget; }
     public static List<String> getOptions() { return options; }
     public static int getSelection() { return selection; }
+
+    /**
+     * Recherche par propagation (BFS) les monstres à portée de poursuite du joueur (<= 3 cases)
+     * et relayés de monstre en monstre à portée (<= 3 cases), jusqu'à un maximum de 6 ennemis.
+     */
+    public static List<entity> findMonsterGroup(entity playerEntity, entity initialTarget, map gameMap) {
+        List<entity> enemies = new ArrayList<>();
+        if (initialTarget instanceof monster) {
+            enemies.add(initialTarget);
+        }
+
+        if (gameMap == null || !(playerEntity instanceof player)) {
+            return enemies;
+        }
+
+        player p = (player) playerEntity;
+        List<monster> candidates = new ArrayList<>();
+        for (entity e : gameMap.getEntities()) {
+            if (e instanceof monster && !enemies.contains(e)) {
+                candidates.add((monster) e);
+            }
+        }
+
+        Queue<entity> queue = new LinkedList<>();
+        for (entity e : enemies) {
+            queue.add(e);
+        }
+
+        // 1. Ajouter tout monstre directement à portée de poursuite du joueur (3 min + mod Sagesse si positif)
+        for (monster m : new ArrayList<>(candidates)) {
+            int sagMod = diceRollSysteme.getModifier(m.getSagesse());
+            int pursuitRange = 3 + Math.max(0, sagMod);
+
+            int distToPlayer = Math.abs(m.getX() - p.getX()) + Math.abs(m.getY() - p.getY());
+            if (distToPlayer <= pursuitRange && !enemies.contains(m)) {
+                enemies.add(m);
+                queue.add(m);
+                candidates.remove(m);
+                if (enemies.size() >= 6) break;
+            }
+        }
+
+        // 2. Relais de poursuite entre monstres : chaque monstre dans le groupe relaye la poursuite aux monstres à portée
+        while (!queue.isEmpty() && enemies.size() < 6) {
+            entity current = queue.poll();
+
+            for (monster m : new ArrayList<>(candidates)) {
+                int sagMod = diceRollSysteme.getModifier(m.getSagesse());
+                int pursuitRange = 3 + Math.max(0, sagMod);
+
+                int distToCurrent = Math.abs(m.getX() - current.getX()) + Math.abs(m.getY() - current.getY());
+                if (distToCurrent <= pursuitRange) {
+                    enemies.add(m);
+                    queue.add(m);
+                    candidates.remove(m);
+                    if (enemies.size() >= 6) break;
+                }
+            }
+        }
+
+        return enemies;
+    }
 }

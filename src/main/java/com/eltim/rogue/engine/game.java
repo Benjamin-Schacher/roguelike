@@ -4,6 +4,8 @@ import com.eltim.rogue.entity.player;
 import com.eltim.rogue.level.level;
 import com.eltim.rogue.level.tutoLevel;
 import com.eltim.rogue.level.Level1;
+import com.eltim.rogue.level.TextLevel;
+import com.eltim.rogue.level.LevelLoader;
 import com.eltim.rogue.system.mouvementSysteme;
 import com.eltim.rogue.system.InteractionSysteme;
 import com.eltim.rogue.system.combatSysteme;
@@ -108,13 +110,9 @@ public class game {
 
             com.eltim.rogue.system.InventorySystem.update();
 
-            // IA des ennemis (seulement hors combat, en mode PLAYING)
-            if (state == GameState.PLAYING && currentMap != null && !combatSysteme.isCombatOpen()) {
-                boolean wasMenuOpen = InteractionSysteme.isMenuOpen();
+            // IA des ennemis (seulement hors combat et hors menu d'interaction, en mode PLAYING)
+            if (state == GameState.PLAYING && currentMap != null && !combatSysteme.isCombatOpen() && !InteractionSysteme.isMenuOpen()) {
                 com.eltim.rogue.system.EnemyAISystem.tick(currentMap, player, frameCount);
-                if (!wasMenuOpen && InteractionSysteme.isMenuOpen()) {
-                    inputHandler.clear();
-                }
                 frameCount++;
             }
 
@@ -219,8 +217,10 @@ public class game {
                 }
                 break;
             case KeyEvent.VK_UP:
+            case KeyEvent.VK_Z:
+            case KeyEvent.VK_W:
                 mouvementSysteme.moveEntity(player, 0, -1, currentMap);
-                if (InteractionSysteme.isMenuOpen()) {
+                if (InteractionSysteme.isMenuOpen() || combatSysteme.isCombatOpen()) {
                     inputHandler.clear();
                 } else {
                     checkDescriptionTrigger();
@@ -228,8 +228,9 @@ public class game {
                 }
                 break;
             case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_S:
                 mouvementSysteme.moveEntity(player, 0, 1, currentMap);
-                if (InteractionSysteme.isMenuOpen()) {
+                if (InteractionSysteme.isMenuOpen() || combatSysteme.isCombatOpen()) {
                     inputHandler.clear();
                 } else {
                     checkDescriptionTrigger();
@@ -237,8 +238,10 @@ public class game {
                 }
                 break;
             case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_Q:
+            case KeyEvent.VK_A:
                 mouvementSysteme.moveEntity(player, -1, 0, currentMap);
-                if (InteractionSysteme.isMenuOpen()) {
+                if (InteractionSysteme.isMenuOpen() || combatSysteme.isCombatOpen()) {
                     inputHandler.clear();
                 } else {
                     checkDescriptionTrigger();
@@ -246,8 +249,9 @@ public class game {
                 }
                 break;
             case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_D:
                 mouvementSysteme.moveEntity(player, 1, 0, currentMap);
-                if (InteractionSysteme.isMenuOpen()) {
+                if (InteractionSysteme.isMenuOpen() || combatSysteme.isCombatOpen()) {
                     inputHandler.clear();
                 } else {
                     checkDescriptionTrigger();
@@ -292,28 +296,52 @@ public class game {
         int px = player.getX();
         int py = player.getY();
 
-        if (currentLevel instanceof tutoLevel) {
+        if (currentLevel instanceof TextLevel) {
+            TextLevel tl = (TextLevel) currentLevel;
+            LevelLoader.LevelData data = tl.getData();
+
             com.eltim.rogue.world.tile currentTile = currentMap.getTile(px, py);
-            if (currentTile != null && currentTile.getSymbol() == '^') {
+            String tileSymbol = (currentTile != null) ? String.valueOf(currentTile.getSymbol()) : "";
+
+            String transitionRule = null;
+            if (data.transitions.containsKey(tileSymbol)) {
+                transitionRule = data.transitions.get(tileSymbol);
+            } else if (py == 32 && px >= 9 && px <= 15 && data.transitions.containsKey("<tuto->")) {
+                transitionRule = data.transitions.get("<tuto->");
+            }
+
+            if (transitionRule != null) {
+                String[] parts = transitionRule.split("\\|");
+                String targetFile = parts[0].trim();
+                int nextX = data.spawnX;
+                int nextY = data.spawnY;
+                String msg = "";
+
+                for (int i = 1; i < parts.length; i++) {
+                    String p = parts[i].trim();
+                    if (p.startsWith("spawn:")) {
+                        String[] coords = p.substring(6).trim().split(",");
+                        if (coords.length == 2) {
+                            nextX = Integer.parseInt(coords[0].trim());
+                            nextY = Integer.parseInt(coords[1].trim());
+                        }
+                    } else if (p.startsWith("msg:")) {
+                        msg = p.substring(4).trim();
+                    }
+                }
+
                 currentMap.removeEntity(player);
-                Level1 nextLevel = new Level1();
+                TextLevel nextLevel = new TextLevel(targetFile);
                 currentLevel = nextLevel;
                 currentMap = nextLevel.generate(player);
-                player.setX(12);
-                player.setY(31);
+                player.setX(nextX);
+                player.setY(nextY);
                 currentMap.addEntity(player);
-                ExplorationLog.add("Vous franchissez la sortie et entrez dans le Sous-sol de la forteresse !");
-            }
-        } else if (currentLevel instanceof Level1) {
-            if (py == 32 && px >= 9 && px <= 15) {
-                currentMap.removeEntity(player);
-                tutoLevel tuto = new tutoLevel();
-                currentLevel = tuto;
-                currentMap = tuto.generate(player);
-                player.setX(26);
-                player.setY(1);
-                currentMap.addEntity(player);
-                ExplorationLog.add("Vous retournez dans la Prison.");
+
+                if (!msg.isEmpty()) {
+                    ExplorationLog.add(msg);
+                }
+                return;
             }
         }
     }

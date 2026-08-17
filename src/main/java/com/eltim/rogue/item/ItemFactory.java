@@ -2,90 +2,80 @@ package com.eltim.rogue.item;
 
 import com.eltim.rogue.item.base.item;
 import com.eltim.rogue.item.enumerateur.itemQualityTypeEnum;
-import com.eltim.rogue.item.enumerateur.itemTypeEnum;
-import com.eltim.rogue.item.enumerateur.weaponTypeEnum;
-import com.eltim.rogue.item.enumerateur.potionTypeEnum;
-import com.eltim.rogue.system.enumarateur.damageTypeEnum;
+import com.eltim.rogue.item.itemImplementation.equipementImplementation;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class ItemFactory {
     private static final Random random = new Random();
+    private static final equipementImplementation equipImpl = new equipementImplementation();
 
     public static item generateRandomItem(itemQualityTypeEnum quality) {
-        int typeRand = random.nextInt(2); // 0 = Potion, 1 = Arme
-
-        if (typeRand == 0) {
-            return generateRandomPotion(quality);
-        } else {
-            return generateRandomWeapon(quality);
+        List<item> candidates = getItemsByQuality(quality);
+        if (candidates.isEmpty()) {
+            candidates = equipImpl.getAllItems();
         }
-    }
-
-    public static potion generateRandomPotion(itemQualityTypeEnum quality) {
-        potionTypeEnum[] types = potionTypeEnum.values();
-        potionTypeEnum selectedType = types[random.nextInt(types.length)];
-        
-        String name;
-        int cost;
-        switch (quality) {
-            case UNCOMMON: cost = 25; name = "Potion supérieure de " + getTranslatedName(selectedType); break;
-            case RARE: cost = 50; name = "Potion rare de " + getTranslatedName(selectedType); break;
-            case EPIC: cost = 100; name = "Élixir de " + getTranslatedName(selectedType); break;
-            case LEGENDARY: cost = 250; name = "Larme divine de " + getTranslatedName(selectedType); break;
-            case COMMON:
-            default:
-                cost = 10; name = "Potion de " + getTranslatedName(selectedType); break;
-        }
-        return new potion(name, cost, quality, selectedType);
+        if (candidates.isEmpty()) return null;
+        return candidates.get(random.nextInt(candidates.size()));
     }
 
     public static weapon generateRandomWeapon(itemQualityTypeEnum quality) {
-        int diceCount = 1;
-        int diceSides = 4;
-        String name = "Arme";
-
-        switch (quality) {
-            case UNCOMMON: diceCount = 1; diceSides = 6; name = "Arme peu commune"; break;
-            case RARE: diceCount = 2; diceSides = 6; name = "Arme rare"; break;
-            case EPIC: diceCount = 2; diceSides = 8; name = "Arme épique"; break;
-            case LEGENDARY: diceCount = 3; diceSides = 8; name = "Arme légendaire"; break;
-            case COMMON:
-            default:
-                diceCount = 1; diceSides = 4; name = "Arme commune"; break;
+        List<item> candidates = new ArrayList<>();
+        for (item i : getItemsByQuality(quality)) {
+            if (i instanceof weapon) {
+                candidates.add(i);
+            }
         }
-
-        weaponTypeEnum[] wTypes = weaponTypeEnum.values();
-        weaponTypeEnum selectedType = wTypes[random.nextInt(wTypes.length)];
-        
-        itemTypeEnum subType = itemTypeEnum.SWORD;
-        damageTypeEnum dmgType = damageTypeEnum.PHYSICAL;
-
-        if (selectedType == weaponTypeEnum.MELEE) {
-            name = name.replace("Arme", "Épée");
-            subType = itemTypeEnum.SWORD;
-            dmgType = damageTypeEnum.PHYSICAL;
-        } else if (selectedType == weaponTypeEnum.DISTANCE) {
-            name = name.replace("Arme", "Arc");
-            subType = itemTypeEnum.BOW;
-            dmgType = damageTypeEnum.PHYSICAL;
-        } else if (selectedType == weaponTypeEnum.MAGIC) {
-            name = name.replace("Arme", "Bâton");
-            subType = itemTypeEnum.STAFF;
-            dmgType = damageTypeEnum.MAGICAL;
+        if (candidates.isEmpty()) {
+            for (item i : equipImpl.getAllItems()) {
+                if (i instanceof weapon) {
+                    candidates.add(i);
+                }
+            }
         }
-
-        return new weapon(name, diceCount, diceSides, subType, quality, selectedType, false, dmgType);
+        if (candidates.isEmpty()) return null;
+        return (weapon) candidates.get(random.nextInt(candidates.size()));
     }
 
-    private static String getTranslatedName(potionTypeEnum pType) {
-        switch(pType) {
-            case HEAL: return "Soins";
-            case MANA: return "Mana";
-            case STRENGTH: return "Force";
-            case DEFENSE: return "Défense";
-            case SPEED: return "Vitesse";
-            case AGILITY: return "Agilité";
-            default: return "Mystère";
+    public static potion generateRandomPotion(itemQualityTypeEnum quality) {
+        List<item> candidates = new ArrayList<>();
+        for (item i : getItemsByQuality(quality)) {
+            if (i instanceof potion) {
+                candidates.add(i);
+            }
         }
+        if (candidates.isEmpty()) {
+            for (item i : equipImpl.getAllItems()) {
+                if (i instanceof potion) {
+                    candidates.add(i);
+                }
+            }
+        }
+        if (candidates.isEmpty()) return null;
+        return (potion) candidates.get(random.nextInt(candidates.size()));
+    }
+
+    private static List<item> getItemsByQuality(itemQualityTypeEnum quality) {
+        List<item> matching = new ArrayList<>();
+        itemQualityTypeEnum targetQuality = (quality != null) ? quality : itemQualityTypeEnum.COMMON;
+
+        for (item i : equipImpl.getAllItems()) {
+            if (i.getQuality() == targetQuality) {
+                matching.add(i);
+            }
+        }
+
+        // Si aucun objet de la rareté exacte n'est trouvé, se rabattre sur les objets disponibles
+        if (matching.isEmpty()) {
+            for (item i : equipImpl.getAllItems()) {
+                if (i.getQuality() == itemQualityTypeEnum.RARE || i.getQuality() == itemQualityTypeEnum.UNCOMMON || i.getQuality() == itemQualityTypeEnum.COMMON) {
+                    matching.add(i);
+                }
+            }
+        }
+
+        return matching;
     }
 }

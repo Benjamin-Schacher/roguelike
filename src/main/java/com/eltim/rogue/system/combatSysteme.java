@@ -41,8 +41,24 @@ public class combatSysteme {
     private static int turnDelayCounter = 0;
     private static long combatOpenTime = 0;
     private static boolean itemUsedThisTurn = false;
+    private static boolean inItemSubMenu = false;
+    private static List<com.eltim.rogue.item.base.item> usableItemsSubMenu = new ArrayList<>();
+
+    private static void resetMainMenuOptions() {
+        inItemSubMenu = false;
+        usableItemsSubMenu.clear();
+        options.clear();
+        options.add("Attaquer");
+        options.add("Attaquer avec l'arme secondaire"); 
+        options.add("Lancer un sort");
+        options.add("Utiliser objet");
+        options.add("Fuir");
+        selection = 0;
+    }
 
     public static void startCombat(entity player, List<entity> enemies, map gameMap) {
+        com.eltim.rogue.engine.inputHandler.clearInput();
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().startCombatMusic();
         combatOpen = true;
         combatOpenTime = System.currentTimeMillis();
         isCombatEnding = false;
@@ -80,13 +96,7 @@ public class combatSysteme {
         
         targetEnemyIndex = 0;
         findFirstLivingTarget();
-        
-        options.clear();
-        options.add("Attaquer");
-        options.add("Attaquer avec l'arme secondaire"); 
-        options.add("Lancer un sort");
-        options.add("Utiliser objet");
-        options.add("Fuir");
+        resetMainMenuOptions();
         
         combatLog.clear();
         combatLog.add("Le combat commence !");
@@ -130,13 +140,20 @@ public class combatSysteme {
         targetEnemyIndex = 0;
     }
 
+    private static final long DEBOUNCE_MS = 250;
+
     public static void handleInput(KeyEvent key) {
         if (!combatOpen) return;
-        if (System.currentTimeMillis() - combatOpenTime < 150) return;
+
+        long now = System.currentTimeMillis();
+        long elapsed = now - combatOpenTime;
 
         if (isCombatEnding) {
-            if (key.getKeyCode() == KeyEvent.VK_ENTER) {
-                combatOpen = false;
+            if (key.getKeyCode() == KeyEvent.VK_ENTER || key.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                if (elapsed >= DEBOUNCE_MS) {
+                    combatOpen = false;
+                    com.eltim.rogue.engine.inputHandler.clearInput();
+                }
             }
             return;
         }
@@ -160,9 +177,19 @@ public class combatSysteme {
                 if (targetEnemyIndex >= enemyGroup.size()) targetEnemyIndex = 0;
             } while (enemyGroup.get(targetEnemyIndex).isDead() && targetEnemyIndex != start);
         } else if (key.getKeyCode() == KeyEvent.VK_ENTER) {
+            if (elapsed < DEBOUNCE_MS) {
+                return; // Ignorer la touche de confirmation si elle survient trop rapidement après le début du combat
+            }
             executeAction();
         } else if (key.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            if (inItemSubMenu) {
+                resetMainMenuOptions();
+                selection = 3; // Replacer le curseur sur "Utiliser objet"
+                combatLog.add("> Utilisation d'objet annulée.");
+                return;
+            }
             combatOpen = false; 
+            com.eltim.rogue.engine.inputHandler.clearInput();
         }
     }
 
@@ -186,7 +213,7 @@ public class combatSysteme {
         if (isPlayerControlled) {
             itemUsedThisTurn = false;
             findFirstLivingTarget();
-            selection = 0;
+            resetMainMenuOptions();
         } else {
             turnDelayCounter = 30; // Pause avant l'action de l'IA
         }
@@ -229,6 +256,62 @@ public class combatSysteme {
 
     private static void executeAction() {
         if (isCombatEnding) return;
+
+        if (inItemSubMenu) {
+            if (selection >= usableItemsSubMenu.size() || options.get(selection).equals("[ Annuler ]")) {
+                resetMainMenuOptions();
+                selection = 3;
+                combatLog.add("> Utilisation d'objet annulée.");
+                return;
+            }
+
+            com.eltim.rogue.item.base.item chosenItem = usableItemsSubMenu.get(selection);
+            entity targetEntity = enemyGroup.get(targetEnemyIndex);
+
+            if (chosenItem instanceof com.eltim.rogue.item.potion) {
+                ((com.eltim.rogue.item.potion) chosenItem).applyEffect(currentActor);
+                combatLog.add("  -> " + currentActor.getName() + " consomme " + chosenItem.getName() + ".");
+            } else if (chosenItem instanceof com.eltim.rogue.item.objectItem) {
+                com.eltim.rogue.item.objectItem obj = (com.eltim.rogue.item.objectItem) chosenItem;
+                // A. Projectiles offensifs à dégâts (Dague, Pierre, Shuriken, Poudre noire, Grenade, Trait de feu)
+                if (obj.getDamageDiceCount() > 0 && obj.getDamageDiceSides() > 0) {
+                    int dmg = obj.rollDamage();
+                    if (dmg < 1) dmg = 1;
+                    targetEntity.setLifePoint(targetEntity.getLifePoint() - dmg);
+                    combatLog.add("  -> " + chosenItem.getName() + " inflige " + dmg + " dégâts à " + targetEntity.getName() + " !");
+                } 
+                // B. Objet empoisonné (Fiole de poison)
+                else if (obj.getTempDamageOverTime() > 0) {
+                    obj.applyEffect(targetEntity);
+                    combatLog.add("  -> " + chosenItem.getName() + " empoisonne " + targetEntity.getName() + " !");
+                } 
+                // C. Buff / Debuff ciblé (Sac de sable, Parchemins, Fumigène)
+                else if (obj.getBuffEffect() != null && !obj.getBuffEffect().isEmpty()) {
+                    obj.applyEffect(targetEntity);
+                    combatLog.add("  -> " + chosenItem.getName() + " applique l'effet (" + obj.getBuffEffect() + ") sur " + targetEntity.getName() + " !");
+                } 
+                // D. Soin personnel (Bandage)
+                else if (obj.getHealAmount() > 0) {
+                    obj.applyEffect(currentActor);
+                    combatLog.add("  -> " + chosenItem.getName() + " soigne " + currentActor.getName() + " de " + obj.getHealAmount() + " PV !");
+                } 
+                else {
+                    obj.applyEffect(currentActor);
+                    combatLog.add("  -> " + chosenItem.getName() + " utilisé par " + currentActor.getName() + ".");
+                }
+            }
+
+            if (playerEntity instanceof player) {
+                ((player) playerEntity).getInventory().remove(chosenItem);
+            }
+
+            itemUsedThisTurn = true;
+            combatLog.add("> [Objet] " + currentActor.getName() + " utilise " + chosenItem.getName() + " !");
+            cleanCombatLog();
+
+            resetMainMenuOptions();
+            return;
+        }
 
         String action = options.get(selection);
         boolean currentTurnUsed = true;
@@ -327,24 +410,26 @@ public class combatSysteme {
             }
             if (playerEntity instanceof player) {
                 player p = (player) playerEntity;
-                com.eltim.rogue.item.base.item potionItem = null;
+                usableItemsSubMenu.clear();
                 for (com.eltim.rogue.item.base.item it : p.getInventory()) {
-                    if (it instanceof com.eltim.rogue.item.potion) {
-                        potionItem = it;
-                        break;
+                    if (it instanceof com.eltim.rogue.item.potion || it instanceof com.eltim.rogue.item.objectItem) {
+                        usableItemsSubMenu.add(it);
                     }
                 }
-                if (potionItem != null) {
-                    potionItem.applyEffect(currentActor);
-                    p.getInventory().remove(potionItem);
-                    itemUsedThisTurn = true;
-                    combatLog.add("> [Objet Groupe] " + currentActor.getName() + " utilise " + potionItem.getName() + " !");
-                    cleanCombatLog();
-                    return; // Le tour ne s'arrête pas : l'action principale peut encore être effectuée !
-                } else {
-                    combatLog.add("> Pas de potion disponible dans l'inventaire du groupe !");
+                if (usableItemsSubMenu.isEmpty()) {
+                    combatLog.add("> Pas d'objet utilisable disponible dans l'inventaire !");
                     return;
                 }
+
+                inItemSubMenu = true;
+                options.clear();
+                for (com.eltim.rogue.item.base.item it : usableItemsSubMenu) {
+                    options.add("⚡ " + it.getName());
+                }
+                options.add("[ Annuler ]");
+                selection = 0;
+                combatLog.add("--- Choisissez un objet à utiliser ---");
+                return;
             } else {
                 return;
             }
@@ -374,7 +459,6 @@ public class combatSysteme {
         int randIdx = (int) (Math.random() * potentialTargets.size());
         entity target = potentialTargets.get(randIdx);
 
-        combatLog.add("> " + enemy.getName() + " attaque " + target.getName() + ".");
         attackSysteme.doAttackWithWeapon(enemy, target, null, 20);
     }
 
@@ -386,11 +470,15 @@ public class combatSysteme {
     }
 
     private static void victory() {
+        combatOpenTime = System.currentTimeMillis();
         isCombatEnding = true;
         isVictory = true;
         options.clear();
         options.add("[ Continuer ]");
         selection = 0;
+
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("victory");
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().restorePreviousMusic();
 
         combatLog.add(">>> VICTOIRE !!! <<<");
 
@@ -428,11 +516,13 @@ public class combatSysteme {
     }
 
     private static void defeat() {
+        combatOpenTime = System.currentTimeMillis();
         isCombatEnding = true;
         isVictory = false;
         options.clear();
         options.add("[ Continuer ]");
         selection = 0;
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("defeat");
         combatLog.add(">>> DÉFAITE ! GAME OVER <<<");
     }
 
@@ -443,25 +533,35 @@ public class combatSysteme {
     }
 
     public static boolean tryEscape(entity target) {
+        int agiMod = diceRollSysteme.getModifier(playerEntity.getAgilite());
         int defenseFuite = 10 + diceRollSysteme.getModifier(target.getAgilite());
-        if (diceRollSysteme.rollDice(20, diceRollSysteme.getModifier(playerEntity.getAgilite()), defenseFuite)) {
-            combatLog.add("> Fuite réussie !");
+        int roll = (int)(Math.random() * 20) + 1;
+        int total = roll + agiMod;
+        String modSign = (agiMod >= 0) ? ("+" + agiMod) : String.valueOf(agiMod);
+
+        if (total >= defenseFuite) {
+            combatLog.add("> " + playerEntity.getName() + " tente de Fuir (Jet d20: " + roll + " " + modSign + " = " + total + " vs SEUIL " + defenseFuite + ") -> FUITE RÉUSSIE !");
             combatOpen = false;
             return true;
         } else {
-            combatLog.add("> Fuite échouée.");
+            combatLog.add("> " + playerEntity.getName() + " tente de Fuir (Jet d20: " + roll + " " + modSign + " = " + total + " vs SEUIL " + defenseFuite + ") -> FUITE ÉCHOUÉE !");
             return false;
         }
     }
 
     public static boolean trySpell(entity attacker, entity target) {
         int magicValue = getMagicStatValue(attacker);
+        int magicMod = diceRollSysteme.getModifier(magicValue);
         int targetDefense = 10 + diceRollSysteme.getModifier(target.getAgilite());
+        int roll = (int)(Math.random() * 20) + 1;
+        int total = roll + magicMod;
+        String modSign = (magicMod >= 0) ? ("+" + magicMod) : String.valueOf(magicMod);
 
-        if (diceRollSysteme.rollDice(20, diceRollSysteme.getModifier(magicValue), targetDefense)) {
+        if (total >= targetDefense) {
+            combatLog.add("> " + attacker.getName() + " lance un [Sort Magique] (Jet d20: " + roll + " " + modSign + " = " + total + " vs DEF " + targetDefense + ") -> INCANTATION RÉUSSIE !");
             return true;
         } else {
-            combatLog.add("> Incantation ratée.");
+            combatLog.add("> " + attacker.getName() + " lance un [Sort Magique] (Jet d20: " + roll + " " + modSign + " = " + total + " vs DEF " + targetDefense + ") -> INCANTATION RATÉE !");
             return false;
         }
     }

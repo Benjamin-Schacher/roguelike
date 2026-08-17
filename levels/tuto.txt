@@ -1,0 +1,49 @@
+[INFO]
+name = Prison
+ambiance = Dark Tomb
+spawn = 15,13
+
+[DESCRIPTIONS]
+"Le mort vivant sanble a peine conscient, il ne devrais pas faire long feu !" | "Un hotel a la gloire de Karin, dieux des voleurs. On dit qu'il a réussi a volé des étoiles !" | "Salot de barons ! Il ma tout pris, sauf ma vengeance ! Et je vais allez la lui foutre dans la geule... Tien quesque c'est que ce bruit... ?" | "Merde c'est quoi ce truc, on dirait que le garde a subit une malédiction. Cette porte semble vieille et fragile, je dois pouvoir la forcer." | "Peux être que ce bandit accepterait de m'aider a sotir d'ici ? Comme on dit "Dans la merde on patoge tous ensemble" !"
+
+[MONSTERS]
+M = Garde zombie | HP:15 | XP:25 | STR:8 | AGI:4 | SAG:6 | INT:4 | CHR:14 | CON:18 | LOOT:Clé rouillée:152
+
+[NPCS]
+V = Varain | LVL:1 | HP:8 | STR:12 | AGI:12 | SAG:6 | INT:14 | CHR:12 | CON:8 | LOOT:Clé rouillée:152
+
+[TRANSITIONS]
+^ = levels/level1.txt | spawn: 12,31 | msg: Vous franchissez la sortie et entrez dans le Sous-sol de la forteresse !
+
+[INTERACTIONS]
+£ = Prier le dieux Karin, si c'est ton dieux le gond de la porte de la prison lache user par la vieillesse.
+
+[MAP]
+11111111###############^^^^^^^######################
+11111111#                             #           L#
+11111111#                             X    MM      #
+11111111#                             X    M       #
+11111111#                             #            #
+################        ############################
+#              |        |              #111111111111
+#              D        D             /#111111111111
+#              |        |           l=o#111111111111
+#              |        |             \#111111111111
+################   M    ################111111111111
+################        ################111111111111
+#   £          |  ?     |              #111111111111
+#   ? ?@      ?O        D              #111111111111
+#              |        |              #111111111111
+#              |        |              #111111111111
+################        ################111111111111
+################        ################111111111111
+#              |        |              #111111111111
+#\             X       ?X              #111111111111
+#o=l           |        |      V       #111111111111
+#/             |        |              #111111111111
+################        ################111111111111
+11111111#                       #1111111111111111111
+11111111#                      L#1111111111111111111
+11111111#L                      #1111111111111111111
+11111111#      L               L#1111111111111111111
+11111111#########################1111111111111111111

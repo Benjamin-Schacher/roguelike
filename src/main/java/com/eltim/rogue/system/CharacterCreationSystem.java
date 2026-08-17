@@ -52,7 +52,7 @@ public class CharacterCreationSystem {
         belief = Belief.SANS_RELIGION;
         symbol = '@';
         force = 10; agilite = 10; intelligence = 10; charisme = 10; constitution = 10; sagesse = 10;
-        availablePoints = 15;
+        availablePoints = 10;
         currentField = Field.NAME;
         isEditingName = false;
         isEditingSymbol = false;

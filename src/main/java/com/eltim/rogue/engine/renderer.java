@@ -139,6 +139,9 @@ public class renderer extends JPanel {
             else if (e instanceof com.eltim.rogue.entity.environment.DescriptionMarker) {
                 g2d.setColor(Color.ORANGE);
             }
+            else if (e instanceof com.eltim.rogue.entity.environment.InteractionTile) {
+                g2d.setColor(new Color(255, 215, 0)); // Jaune doré pour les éléments d'interaction
+            }
             else if (e instanceof com.eltim.rogue.entity.environment.chest) {
                 com.eltim.rogue.entity.environment.chest ch = (com.eltim.rogue.entity.environment.chest) e;
                 if (ch.isOpen()) {
@@ -436,7 +439,28 @@ public class renderer extends JPanel {
     }
 
     private void drawInteractionMenu(Graphics2D g2d, float scale) {
-        int boxWidth = (int)(350 * scale);
+        String targetName = InteractionSysteme.getTarget() != null && InteractionSysteme.getTarget().getName() != null 
+                             ? InteractionSysteme.getTarget().getName() 
+                             : "Inconnu";
+        String title = " Rencontre : " + targetName + " ";
+
+        int fontTitleSize = Math.max(12, (int)(18 * scale));
+        int fontOptSize = Math.max(10, (int)(16 * scale));
+
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontTitleSize));
+        FontMetrics fmTitle = g2d.getFontMetrics();
+        int maxTextWidth = fmTitle.stringWidth(title);
+
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontOptSize));
+        FontMetrics fmOpt = g2d.getFontMetrics();
+        java.util.List<String> options = InteractionSysteme.getOptions();
+        for (String opt : options) {
+            int optW = fmOpt.stringWidth("=> [ " + opt + " ]");
+            if (optW > maxTextWidth) maxTextWidth = optW;
+        }
+
+        int boxWidth = Math.max((int)(380 * scale), maxTextWidth + (int)(60 * scale));
+        boxWidth = Math.min((int)(getWidth() * 0.92), boxWidth);
         int boxHeight = (int)(250 * scale);
         int bx = (getWidth() - boxWidth) / 2;
         int by = (getHeight() - boxHeight) / 2;
@@ -450,21 +474,14 @@ public class renderer extends JPanel {
         int inset = (int)(4 * scale);
         g2d.drawRect(bx + inset, by + inset, boxWidth - inset*2, boxHeight - inset*2);
 
-        g2d.setFont(new Font("Monospaced", Font.BOLD, Math.max(12, (int)(18 * scale))));
-        String targetName = InteractionSysteme.getTarget() != null && InteractionSysteme.getTarget().getName() != null 
-                             ? InteractionSysteme.getTarget().getName() 
-                             : "Inconnu";
-        String title = " Rencontre : " + targetName + " ";
-        
-        FontMetrics fm = g2d.getFontMetrics();
-        int titleWidth = fm.stringWidth(title);
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontTitleSize));
+        int titleWidth = fmTitle.stringWidth(title);
         g2d.drawString(title, bx + (boxWidth - titleWidth) / 2, by + (int)(30 * scale));
 
         g2d.drawLine(bx + (int)(10*scale), by + (int)(40*scale), bx + boxWidth - (int)(10*scale), by + (int)(40*scale));
         g2d.drawLine(bx + (int)(10*scale), by + (int)(44*scale), bx + boxWidth - (int)(10*scale), by + (int)(44*scale));
 
-        g2d.setFont(new Font("Monospaced", Font.BOLD, Math.max(10, (int)(16 * scale))));
-        java.util.List<String> options = InteractionSysteme.getOptions();
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontOptSize));
         int sel = InteractionSysteme.getSelection();
 
         for (int i = 0; i < options.size(); i++) {
@@ -619,11 +636,27 @@ public class renderer extends JPanel {
         // ============================================
         // BAS-GAUCHE : Terminal d'exploration
         // ============================================
-        java.util.List<String> exploLog = com.eltim.rogue.system.ExplorationLog.getLog();
-        if (!exploLog.isEmpty()) {
+        java.util.List<String> rawLog = com.eltim.rogue.system.ExplorationLog.getLog();
+        if (!rawLog.isEmpty()) {
             int termFontSize = Math.max(8, (int)(11 * scale));
             int termLineH = Math.max(12, (int)(15 * scale));
-            int termW = (int)(360 * scale);
+            int maxChars = Math.max(30, (int)(45 * scale));
+            java.util.List<String> exploLog = wrapLogLines(rawLog, maxChars);
+
+            if (exploLog.size() > 8) {
+                exploLog = exploLog.subList(exploLog.size() - 8, exploLog.size());
+            }
+
+            g2d.setFont(new Font("Monospaced", Font.PLAIN, termFontSize));
+            FontMetrics fmTerm = g2d.getFontMetrics();
+            int maxLineWidth = 0;
+            for (String l : exploLog) {
+                int lw = fmTerm.stringWidth(l);
+                if (lw > maxLineWidth) maxLineWidth = lw;
+            }
+
+            int termW = Math.max((int)(360 * scale), maxLineWidth + (int)(24 * scale));
+            termW = Math.min((int)(getWidth() * 0.75), termW);
             int termH = exploLog.size() * termLineH + (int)(14 * scale);
             int termX = (int)(12 * scale);
             int termY = h - termH - (int)(10 * scale);
@@ -640,10 +673,8 @@ public class renderer extends JPanel {
                     termW + (int)(8*scale), termH + (int)(8*scale),
                     (int)(4*scale), (int)(4*scale));
 
-            g2d.setFont(new Font("Monospaced", Font.PLAIN, termFontSize));
             for (int i = 0; i < exploLog.size(); i++) {
                 String line = exploLog.get(i);
-                // Couleur selon le contenu
                 if (line.contains("Succès")) {
                     g2d.setColor(new Color(80, 220, 80));
                 } else if (line.contains("Échec")) {
@@ -656,6 +687,19 @@ public class renderer extends JPanel {
                 g2d.drawString(line, termX, termY + (int)(12*scale) + i * termLineH);
             }
         }
+    }
+
+    private java.util.List<String> wrapLogLines(java.util.List<String> rawLines, int maxChars) {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        for (String line : rawLines) {
+            if (line.length() <= maxChars) {
+                result.add(line);
+            } else {
+                java.util.List<String> wrapped = wrapText(line, maxChars);
+                result.addAll(wrapped);
+            }
+        }
+        return result;
     }
 
     /**

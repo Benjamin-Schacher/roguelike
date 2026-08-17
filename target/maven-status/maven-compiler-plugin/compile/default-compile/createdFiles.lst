@@ -24,7 +24,6 @@ com\eltim\rogue\system\InventorySystem$Tab.class
 com\eltim\rogue\system\mouvementSysteme.class
 com\eltim\rogue\entity\environment\DescriptionMarker.class
 com\eltim\rogue\world\tile.class
-com\eltim\rogue\item\ItemFactory$1.class
 com\eltim\rogue\item\objectItem.class
 com\eltim\rogue\item\enumerateur\itemTypeEnum.class
 com\eltim\rogue\engine\renderer.class

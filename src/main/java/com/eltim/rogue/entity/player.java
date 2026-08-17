@@ -73,5 +73,8 @@ public class player extends entity {
     
     public void chooseClass(classe c){
         this.classe = c;
+        if (this.classe != null && this.classe.skillPoints < 2) {
+            this.classe.skillPoints = 2;
+        }
     }
 }

@@ -26,20 +26,26 @@ public class attackSysteme {
 
         int roll = (int) (Math.random() * diceSides) + 1;
         boolean isCrit = (roll == diceSides && diceSides == 20);
-        int attackRoll = roll + diceRollSysteme.getModifier(statAttack);
+        int statMod = diceRollSysteme.getModifier(statAttack);
+        int attackRoll = roll + statMod;
+
+        String weaponName = (w != null && w.getName() != null && !w.getName().isEmpty()) ? w.getName() : "Mains nues";
+        String modSign = (statMod >= 0) ? ("+" + statMod) : String.valueOf(statMod);
 
         if (isCrit) {
-            combatSysteme.getLog().add("> [" + attacker.getName() + "] FAIT UN CRITIQUE sur " + target.getName() + " !");
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("crit");
+            combatSysteme.getLog().add("> " + attacker.getName() + " utilise [" + weaponName + "] (Jet d" + diceSides + ": " + roll + " - CRITIQUE !) vs DEF " + targetDefense);
             damageSysteme.doDamageWithWeapon(attacker, target, w, true);
             return true;
         }
 
         if (attackRoll >= targetDefense) {
-            combatSysteme.getLog().add("> [" + attacker.getName() + "] touche " + target.getName() + ".");
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("hit");
+            combatSysteme.getLog().add("> " + attacker.getName() + " utilise [" + weaponName + "] (Jet d" + diceSides + ": " + roll + " " + modSign + " = " + attackRoll + " vs DEF " + targetDefense + ") -> TOUCHE !");
             damageSysteme.doDamageWithWeapon(attacker, target, w, false);
             return true;
         } else {
-            combatSysteme.getLog().add("> [" + attacker.getName() + "] rate " + target.getName() + ".");
+            combatSysteme.getLog().add("> " + attacker.getName() + " utilise [" + weaponName + "] (Jet d" + diceSides + ": " + roll + " " + modSign + " = " + attackRoll + " vs DEF " + targetDefense + ") -> RATÉ !");
             return false;
         }
     }

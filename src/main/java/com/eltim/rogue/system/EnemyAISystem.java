@@ -17,9 +17,12 @@ public class EnemyAISystem {
             if (e instanceof monster) {
                 monster m = (monster) e;
                 
-                // Ne bouger que si le joueur est à 3 cases ou moins de distance
+                // Portée de poursuite : 3 cases minimum + modificateur de Sagesse (si positif)
+                int sagMod = diceRollSysteme.getModifier(m.getSagesse());
+                int pursuitRange = 3 + Math.max(0, sagMod);
+
                 int distance = Math.abs(m.getX() - p.getX()) + Math.abs(m.getY() - p.getY());
-                if (distance <= 3) {
+                if (distance <= pursuitRange) {
                     // Calculer la vitesse de déplacement en fonction de la Dextérité (Agilité)
                     // Plus l'agilité est élevée, moins de frames sont nécessaires pour bouger
                     int dex = m.getAgilite();

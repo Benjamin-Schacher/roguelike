@@ -20,8 +20,10 @@ public class mouvementSysteme {
                 e.setX(newX);
                 e.setY(newY);
             } else {
-                // Lancer l'interaction !
-                InteractionSysteme.onEncounter(e, targetEntity, gameMap);
+                // Lancer l'interaction uniquement si le menu n'est pas déjà ouvert
+                if (!InteractionSysteme.isMenuOpen()) {
+                    InteractionSysteme.onEncounter(e, targetEntity, gameMap);
+                }
             }
         } else if (gameMap.getTile(newX, newY).isWalkable()) {
             // Se déplacer normalement si c'est vide

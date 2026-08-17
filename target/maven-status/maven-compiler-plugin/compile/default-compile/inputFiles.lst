@@ -2,6 +2,7 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\engine\game.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\engine\inputHandler.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\engine\renderer.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\engine\sound\SoundManager.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\Belief.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\entity.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\Gender.java
@@ -17,6 +18,7 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\environment\door.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\environment\doorStateEnum.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\environment\eventeMap.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\environment\InteractionTile.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\environment\transitionLevel.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\monster.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\npc.java
@@ -43,6 +45,8 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\item\weapon.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\level.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\Level1.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\LevelLoader.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\TextLevel.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\level\tutoLevel.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\Main.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\spell\fireBallSpell.java

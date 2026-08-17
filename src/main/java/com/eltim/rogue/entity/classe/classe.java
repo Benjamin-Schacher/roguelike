@@ -8,8 +8,8 @@ public abstract class classe {
     public String name;
     public String description;
 
-    /** Points de compétence disponibles à dépenser. On reçoit 2 points par niveau. */
-    public int skillPoints = 0;
+    /** Points de compétence disponibles à dépenser. Le joueur démarre avec 2 points de base et en gagne 2 par niveau. */
+    public int skillPoints = 2;
 
     /** Les 4 arbres de compétences de la classe. */
     public List<SkillTree> trees = new ArrayList<>();
