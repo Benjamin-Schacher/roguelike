@@ -1,6 +1,5 @@
 
-ok pas mal ça avance bien, jsp pourquoi le ? devant la porte quand je marche dessu ça fait rien. On va changer un peux les menu, quand jouvre l'inventaire je veux pouvoir souicher de joueur pour equiper tel ou tel arme a tel ou tel joueur,un onglet consomable ou ta tou les item type potion qu'on peux utiliser pour un effet et je veux avoir un ongler objet pour tout les item que j'ai en dehors des item des catégorie d'avant
-
+un mélange de jrpg et de roguelike. Tant que le joueur na pas rencontrée la valkyrie a sa mort il revient toujours au début sinon il revient au camp de valkyrie. (idée de revenir en arrière en mode rembobinage en cas de mort) Une fois la valkyrie débloquer tu peux lui demander de s'auvegarder le poit a l'instant T dans le temps pour revenir ici a ta prochaine mort.
 
 
 on va commencer a faire les classe: a chaque niveaux tu a 2 points a dépenser, les abiliter coute 1 et a partire du tier 3 comprie coute 2. chaque classe a 4 arbre de compétence en 5 tier chacun donc au total 20 compétence. Au niveau 5 on débloque la spétialiter mais ça on verra plus tard

@@ -21,12 +21,20 @@ public class SoundManager {
     private String currentMusicTrack;
     private String savedPreviousTrack;
 
-    private float musicVolume = 0.75f;
-    private float sfxVolume = 1.0f;
+    private float musicVolume = 0.30f; // Ambiance douce par défaut (30%)
+    private float sfxVolume = 0.80f;
     private boolean muted = false;
 
     public SoundManager() {
         instance = this;
+    }
+
+    public float getMusicVolume() {
+        return musicVolume;
+    }
+
+    public float getSfxVolume() {
+        return sfxVolume;
     }
 
     public static SoundManager getInstance() {

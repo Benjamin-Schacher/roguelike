@@ -22,7 +22,14 @@ public class game {
         INVENTORY,
         SKILL_MENU,
         DESCRIPTION,
-        GAME_OVER
+        GAME_OVER,
+        AUDIO_MENU
+    }
+
+    public static int audioSelectedOption = 0; // 0 = Musique, 1 = Effets Sonores (SFX)
+
+    public static int getAudioSelectedOption() {
+        return audioSelectedOption;
     }
 
     private boolean isRunning;
@@ -165,6 +172,40 @@ public class game {
             return;
         }
 
+        // --- État AUDIO_MENU : Réglages du son ---
+        if (state == GameState.AUDIO_MENU) {
+            com.eltim.rogue.engine.sound.SoundManager soundMgr = com.eltim.rogue.engine.sound.SoundManager.getInstance();
+            int code = key.getKeyCode();
+            if (code == KeyEvent.VK_O || code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_ENTER) {
+                state = GameState.PLAYING;
+                return;
+            }
+            if (code == KeyEvent.VK_UP || code == KeyEvent.VK_Z) {
+                audioSelectedOption = 0; // Musique
+            } else if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_S) {
+                audioSelectedOption = 1; // SFX
+            } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_Q) {
+                if (audioSelectedOption == 0) {
+                    float newVol = Math.max(0.0f, soundMgr.getMusicVolume() - 0.05f);
+                    soundMgr.setMusicVolume(newVol);
+                } else {
+                    float newVol = Math.max(0.0f, soundMgr.getSfxVolume() - 0.05f);
+                    soundMgr.setSfxVolume(newVol);
+                }
+            } else if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
+                if (audioSelectedOption == 0) {
+                    float newVol = Math.min(1.0f, soundMgr.getMusicVolume() + 0.05f);
+                    soundMgr.setMusicVolume(newVol);
+                } else {
+                    float newVol = Math.min(1.0f, soundMgr.getSfxVolume() + 0.05f);
+                    soundMgr.setSfxVolume(newVol);
+                }
+            } else if (code == KeyEvent.VK_M) {
+                soundMgr.toggleMute();
+            }
+            return;
+        }
+
         // --- État GAME OVER : Entrée pour recommencer, Échap pour quitter ---
         if (state == GameState.GAME_OVER) {
             if (key.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -214,6 +255,12 @@ public class game {
                     state = GameState.SKILL_MENU;
                     inputHandler.clear();
                     com.eltim.rogue.system.SkillMenuSystem.open(player.classe);
+                }
+                break;
+            case KeyEvent.VK_O:
+                if (state == GameState.PLAYING) {
+                    state = GameState.AUDIO_MENU;
+                    inputHandler.clear();
                 }
                 break;
             case KeyEvent.VK_UP:
