@@ -21,12 +21,17 @@ public class SoundManager {
     private String currentMusicTrack;
     private String savedPreviousTrack;
 
-    private float musicVolume = 0.30f; // Ambiance douce par défaut (30%)
-    private float sfxVolume = 0.80f;
+    private float masterVolume = 1.00f; // Son Total (100%)
+    private float musicVolume = 0.50f;  // Musique & Ambiance (50%)
+    private float sfxVolume = 0.80f;    // Effets Sonores / VFX (80%)
     private boolean muted = false;
 
     public SoundManager() {
         instance = this;
+    }
+
+    public float getMasterVolume() {
+        return masterVolume;
     }
 
     public float getMusicVolume() {
@@ -35,6 +40,14 @@ public class SoundManager {
 
     public float getSfxVolume() {
         return sfxVolume;
+    }
+
+    public float getEffectiveMusicVolume() {
+        return masterVolume * musicVolume;
+    }
+
+    public float getEffectiveSfxVolume() {
+        return masterVolume * sfxVolume;
     }
 
     public static SoundManager getInstance() {
@@ -91,7 +104,7 @@ public class SoundManager {
 
                     synchronized (SoundManager.this) {
                         musicLine = line;
-                        setLineVolume(musicLine, musicVolume);
+                        setLineVolume(musicLine, getEffectiveMusicVolume());
                     }
                     line.start();
 
@@ -176,7 +189,7 @@ public class SoundManager {
                 if (ais != null) {
                     Clip clip = AudioSystem.getClip();
                     clip.open(ais);
-                    setClipVolume(clip, sfxVolume);
+                    setClipVolume(clip, getEffectiveSfxVolume());
                     clip.start();
                 }
             } catch (Exception ignored) {}
@@ -251,15 +264,22 @@ public class SoundManager {
         setLineVolume(clip, volume);
     }
 
-    public void setMusicVolume(float volume) {
-        this.musicVolume = volume;
+    public void setMasterVolume(float volume) {
+        this.masterVolume = Math.max(0.0f, Math.min(1.0f, volume));
         synchronized (this) {
-            setLineVolume(musicLine, musicVolume);
+            setLineVolume(musicLine, getEffectiveMusicVolume());
+        }
+    }
+
+    public void setMusicVolume(float volume) {
+        this.musicVolume = Math.max(0.0f, Math.min(1.0f, volume));
+        synchronized (this) {
+            setLineVolume(musicLine, getEffectiveMusicVolume());
         }
     }
 
     public void setSfxVolume(float volume) {
-        this.sfxVolume = volume;
+        this.sfxVolume = Math.max(0.0f, Math.min(1.0f, volume));
     }
 
     public void toggleMute() {

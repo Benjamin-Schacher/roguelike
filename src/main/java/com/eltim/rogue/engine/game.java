@@ -172,33 +172,42 @@ public class game {
             return;
         }
 
-        // --- État AUDIO_MENU : Réglages du son ---
+        // --- État AUDIO_MENU : Réglages du son (Master, Musique, VFX) ---
         if (state == GameState.AUDIO_MENU) {
             com.eltim.rogue.engine.sound.SoundManager soundMgr = com.eltim.rogue.engine.sound.SoundManager.getInstance();
             int code = key.getKeyCode();
-            if (code == KeyEvent.VK_O || code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_ENTER) {
+
+            if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_O) {
                 state = GameState.PLAYING;
                 return;
             }
-            if (code == KeyEvent.VK_UP || code == KeyEvent.VK_Z) {
-                audioSelectedOption = 0; // Musique
+
+            if (code == KeyEvent.VK_ENTER) {
+                if (audioSelectedOption == 3) {
+                    state = GameState.PLAYING;
+                }
+                return;
+            }
+
+            if (code == KeyEvent.VK_UP || code == KeyEvent.VK_Z || code == KeyEvent.VK_W) {
+                audioSelectedOption = (audioSelectedOption - 1 + 4) % 4;
             } else if (code == KeyEvent.VK_DOWN || code == KeyEvent.VK_S) {
-                audioSelectedOption = 1; // SFX
-            } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_Q) {
+                audioSelectedOption = (audioSelectedOption + 1) % 4;
+            } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_Q || code == KeyEvent.VK_A) {
                 if (audioSelectedOption == 0) {
-                    float newVol = Math.max(0.0f, soundMgr.getMusicVolume() - 0.05f);
-                    soundMgr.setMusicVolume(newVol);
-                } else {
-                    float newVol = Math.max(0.0f, soundMgr.getSfxVolume() - 0.05f);
-                    soundMgr.setSfxVolume(newVol);
+                    soundMgr.setMasterVolume(soundMgr.getMasterVolume() - 0.05f);
+                } else if (audioSelectedOption == 1) {
+                    soundMgr.setMusicVolume(soundMgr.getMusicVolume() - 0.05f);
+                } else if (audioSelectedOption == 2) {
+                    soundMgr.setSfxVolume(soundMgr.getSfxVolume() - 0.05f);
                 }
             } else if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
                 if (audioSelectedOption == 0) {
-                    float newVol = Math.min(1.0f, soundMgr.getMusicVolume() + 0.05f);
-                    soundMgr.setMusicVolume(newVol);
-                } else {
-                    float newVol = Math.min(1.0f, soundMgr.getSfxVolume() + 0.05f);
-                    soundMgr.setSfxVolume(newVol);
+                    soundMgr.setMasterVolume(soundMgr.getMasterVolume() + 0.05f);
+                } else if (audioSelectedOption == 1) {
+                    soundMgr.setMusicVolume(soundMgr.getMusicVolume() + 0.05f);
+                } else if (audioSelectedOption == 2) {
+                    soundMgr.setSfxVolume(soundMgr.getSfxVolume() + 0.05f);
                 }
             } else if (code == KeyEvent.VK_M) {
                 soundMgr.toggleMute();

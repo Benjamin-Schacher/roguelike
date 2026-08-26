@@ -1,5 +1,9 @@
 
+
 un mélange de jrpg et de roguelike. Tant que le joueur na pas rencontrée la valkyrie a sa mort il revient toujours au début sinon il revient au camp de valkyrie. (idée de revenir en arrière en mode rembobinage en cas de mort) Une fois la valkyrie débloquer tu peux lui demander de s'auvegarder le poit a l'instant T dans le temps pour revenir ici a ta prochaine mort.
+
+prompte:
+systheme de fuite : teste de dex cotre la meilleur dex du groupe enemie, si réussi sort du menue et groupe ennemie stun pendant 5 seconde
 
 
 on va commencer a faire les classe: a chaque niveaux tu a 2 points a dépenser, les abiliter coute 1 et a partire du tier 3 comprie coute 2. chaque classe a 4 arbre de compétence en 5 tier chacun donc au total 20 compétence. Au niveau 5 on débloque la spétialiter mais ça on verra plus tard

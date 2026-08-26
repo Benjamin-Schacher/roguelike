@@ -10,13 +10,32 @@ import com.eltim.rogue.system.combatSysteme;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.util.List;
 
 public class renderer extends JPanel {
+
+    public static double CRT_CURVATURE_PRIMARY = 0.025;   // Courbure très subtile (effet léger)
+    public static double CRT_CURVATURE_SECONDARY = 0.005; // Déformation minime des bords
+    public static float CRT_CORNER_RADIUS_RATIO = 0.03f;  // Arrondi discret aux 4 coins (très léger)
+
+    public void setCRTCurvature(double primary, double secondary, float cornerRatio) {
+        CRT_CURVATURE_PRIMARY = primary;
+        CRT_CURVATURE_SECONDARY = secondary;
+        CRT_CORNER_RADIUS_RATIO = cornerRatio;
+        cachedW = 0; 
+    }
+
     private JFrame frame;
     private map currentMap;
     private BufferedImage crtOverlay;
+    private BufferedImage sceneBuffer;
+    private BufferedImage distortedBuffer;
+    private int[] lutMap;
+    private int cachedW = 0;
+    private int cachedH = 0;
     private float scanlineOffset = 0;
 
     public renderer() {
@@ -64,12 +83,46 @@ public class renderer extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         
-        Graphics2D g2d = (Graphics2D) g;
-        float scale = Math.min((float) getWidth() / 800f, (float) getHeight() / 600f);
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return;
 
+        // 1. Initialiser/Redimensionner les tampons d'image hors écran si la taille change
+        if (sceneBuffer == null || sceneBuffer.getWidth() != w || sceneBuffer.getHeight() != h) {
+            sceneBuffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            distortedBuffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            updateBarrelLUT(w, h);
+        }
+
+        // 2. Dessiner L'INTÉGRALITÉ du jeu (Map, Menus, UI, HUD, Création) sur sceneBuffer
+        Graphics2D g2dBuffer = sceneBuffer.createGraphics();
+        g2dBuffer.setColor(Color.BLACK);
+        g2dBuffer.fillRect(0, 0, w, h);
+
+        float scale = Math.min((float) w / 800f, (float) h / 600f);
+        renderGameScene(g2dBuffer, scale);
+        g2dBuffer.dispose();
+
+        // 3. Déformation géométrique globale (VRAIE Courbure de verre bombé CRT)
+        applyCRTBarrelDistortion(w, h);
+
+        // 4. Zoom-To-Fill : Zoome l'image déformée pour pousser 100% des trous des coins hors de l'écran (marge de sécurité totale)
+        double zoomToFill = 1.0 + (CRT_CURVATURE_PRIMARY * 2.5) + (CRT_CURVATURE_SECONDARY * 3.5);
+        int zoomW = (int) (w * zoomToFill);
+        int zoomH = (int) (h * zoomToFill);
+        int zoomX = (w - zoomW) / 2;
+        int zoomY = (h - zoomH) / 2;
+
+        Graphics2D g2dScreen = (Graphics2D) g;
+        g2dScreen.drawImage(distortedBuffer, zoomX, zoomY, zoomW, zoomH, null);
+
+        // 5. Superposition des scanlines droites
+        drawCRTFilterOverlay(g2dScreen, w, h);
+    }
+
+    private void renderGameScene(Graphics2D g2d, float scale) {
         if (currentState == game.GameState.CHARACTER_CREATION) {
             drawCharacterCreationScreen(g2d, scale);
-            drawCRTFilter(g2d);
             return;
         }
 
@@ -164,6 +217,9 @@ public class renderer extends JPanel {
             drawInventoryScreen(g2d, scale);
         } else if (currentState == game.GameState.SKILL_MENU) {
             drawSkillMenu(g2d, scale, playerObj);
+        } else if (currentState == game.GameState.AUDIO_MENU) {
+            drawHUD(g2d, scale, playerObj);
+            drawAudioMenu(g2d, scale);
         } else if (currentState == game.GameState.DESCRIPTION) {
             drawHUD(g2d, scale, playerObj);
             drawDescriptionPopup(g2d, scale);
@@ -174,16 +230,13 @@ public class renderer extends JPanel {
         } else if (currentState == game.GameState.PLAYING) {
             drawHUD(g2d, scale, playerObj);
         }
-
-        // Ajoute le filtre CRT
-        drawCRTFilter(g2d);
     }
 
     private void drawCombatMenu(Graphics2D g2d, float scale) {
         int w = getWidth();
         int h = getHeight();
-        int boxW = (int) (w * 0.85);
-        int boxH = (int) (h * 0.8);
+        int boxW = (int) (w * 0.78);
+        int boxH = (int) (h * 0.76);
         int bx = (w - boxW) / 2;
         int by = (h - boxH) / 2;
 
@@ -460,7 +513,7 @@ public class renderer extends JPanel {
         }
 
         int boxWidth = Math.max((int)(380 * scale), maxTextWidth + (int)(60 * scale));
-        boxWidth = Math.min((int)(getWidth() * 0.92), boxWidth);
+        boxWidth = Math.min((int)(getWidth() * 0.78), boxWidth);
         int boxHeight = (int)(250 * scale);
         int bx = (getWidth() - boxWidth) / 2;
         int by = (getHeight() - boxHeight) / 2;
@@ -512,8 +565,8 @@ public class renderer extends JPanel {
         // ============================================
         // PARTIE GAUCHE-HAUTE : Barres du joueur
         // ============================================
-        int hudX = (int)(16 * scale);
-        int hudY = (int)(16 * scale); // En haut à gauche
+        int hudX = (int)(42 * scale);
+        int hudY = (int)(38 * scale); // En haut à gauche avec marge de sécurité ATH
         int barW = (int)(180 * scale);
         int barH = (int)(14 * scale);
         int spacing = (int)(22 * scale);
@@ -606,7 +659,7 @@ public class renderer extends JPanel {
         FontMetrics fmLvl = g2d.getFontMetrics();
         int lvlW = fmLvl.stringWidth(lvlName);
         int lvlX = (w - lvlW) / 2;
-        int lvlY = (int)(28 * scale);
+        int lvlY = (int)(42 * scale);
 
         // Fond derrière le nom du niveau
         g2d.setColor(new Color(0, 0, 0, 180));
@@ -631,7 +684,7 @@ public class renderer extends JPanel {
         // ============================================
         g2d.setFont(new Font("Monospaced", Font.BOLD, fontSmall));
         g2d.setColor(new Color(180, 180, 180, 200));
-        g2d.drawString("[E] Inventaire  [K] Compétences", w - (int)(250 * scale), h - (int)(20 * scale));
+        g2d.drawString("[E] Inventaire  [K] Compétences", w - (int)(310 * scale), h - (int)(40 * scale));
 
         // ============================================
         // BAS-GAUCHE : Terminal d'exploration
@@ -656,10 +709,10 @@ public class renderer extends JPanel {
             }
 
             int termW = Math.max((int)(360 * scale), maxLineWidth + (int)(24 * scale));
-            termW = Math.min((int)(getWidth() * 0.75), termW);
+            termW = Math.min((int)(getWidth() * 0.70), termW);
             int termH = exploLog.size() * termLineH + (int)(14 * scale);
-            int termX = (int)(12 * scale);
-            int termY = h - termH - (int)(10 * scale);
+            int termX = (int)(42 * scale);
+            int termY = h - termH - (int)(40 * scale);
 
             // Fond terminal
             g2d.setColor(new Color(0, 10, 0, 180));
@@ -743,28 +796,87 @@ public class renderer extends JPanel {
         g2d.drawString(text, textX, textY);
     }
 
-    private void drawCRTFilter(Graphics2D g2d) {
-        int w = getWidth();
-        int h = getHeight();
-        
-        g2d.setColor(new Color(0, 0, 0, 100)); 
-        scanlineOffset += 0.05f; 
+    // =============================================
+    // ============= DÉFORMATION CATHODIQUE 3D =====
+    // =============================================
+    private void updateBarrelLUT(int w, int h) {
+        if (w == cachedW && h == cachedH && lutMap != null) return;
+        cachedW = w;
+        cachedH = h;
+        lutMap = new int[w * h];
+
+        double cx = w / 2.0;
+        double cy = h / 2.0;
+        double k1 = CRT_CURVATURE_PRIMARY;   // Courbure principale
+        double k2 = CRT_CURVATURE_SECONDARY; // Courbure secondaire
+
+        for (int y = 0; y < h; y++) {
+            double dy = (y - cy) / cy;
+            for (int x = 0; x < w; x++) {
+                double dx = (x - cx) / cx;
+                double r2 = dx * dx + dy * dy;
+
+                double factor = 1.0 + k1 * r2 + k2 * r2 * r2;
+
+                double sx = cx + dx * factor * cx;
+                double sy = cy + dy * factor * cy;
+
+                int ix = (int) Math.round(sx);
+                int iy = (int) Math.round(sy);
+
+                int index = y * w + x;
+                if (ix >= 0 && ix < w && iy >= 0 && iy < h) {
+                    lutMap[index] = iy * w + ix;
+                } else {
+                    lutMap[index] = -1; // Cadre du tube cathodique
+                }
+            }
+        }
+    }
+
+    private void applyCRTBarrelDistortion(int w, int h) {
+        if (lutMap == null || sceneBuffer == null || distortedBuffer == null) return;
+        int[] srcPixels = ((DataBufferInt) sceneBuffer.getRaster().getDataBuffer()).getData();
+        int[] dstPixels = ((DataBufferInt) distortedBuffer.getRaster().getDataBuffer()).getData();
+
+        for (int i = 0; i < dstPixels.length; i++) {
+            int srcIndex = lutMap[i];
+            if (srcIndex >= 0 && srcIndex < srcPixels.length) {
+                dstPixels[i] = srcPixels[srcIndex];
+            } else {
+                dstPixels[i] = 0xFF0B0B10; // Remplissage noir/sombre profond de cadre de tube TV
+            }
+        }
+    }
+
+    private void drawCRTFilterOverlay(Graphics2D g2d, int w, int h) {
+        if (w <= 0 || h <= 0) return;
+
+        // 1. Scanlines droites & Balayage TV (en dehors de la courbure pour un effet vieil écran rétro pur)
+        scanlineOffset += 0.12f;
         if (scanlineOffset >= 3) scanlineOffset = 0;
 
+        g2d.setColor(new Color(0, 0, 0, 36));
         for (float y = scanlineOffset; y < h; y += 3) {
-            g2d.fillRect(0, (int)y, w, 1); 
+            g2d.fillRect(0, (int) y, w, 1);
         }
-        
+
+        // Micro-scintillement / Sauts de ligne aléatoires de rafraîchissement d'écran d'arcade
+        int randomSkipLine = (int)(Math.random() * (h / 4)) * 4;
+        g2d.setColor(new Color(255, 255, 255, 10));
+        g2d.fillRect(0, randomSkipLine, w, 2);
+
+        // 2. Vignetage et lueur de verre (mis en cache)
         if (crtOverlay == null || crtOverlay.getWidth() != w || crtOverlay.getHeight() != h) {
             createCRTOverlay(w, h);
         }
 
-        float flickerAlpha = 0.98f + (float)(Math.random() * 0.02f); 
+        float flickerAlpha = 0.98f + (float)(Math.random() * 0.02f);
         Composite oldComposite = g2d.getComposite();
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, flickerAlpha));
-        
+
         g2d.drawImage(crtOverlay, 0, 0, null);
-        
+
         g2d.setComposite(oldComposite);
     }
 
@@ -772,42 +884,80 @@ public class renderer extends JPanel {
         crtOverlay = new BufferedImage(Math.max(1, w), Math.max(1, h), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = crtOverlay.createGraphics();
 
-        Point center = new Point(w / 2, h / 2);
-        float radius = Math.max(1, Math.max(w, h) * 0.7f); 
-        float[] dist = {0.0f, 0.5f, 1.0f};
-        Color[] colors = {
-            new Color(0, 0, 0, 0),       
-            new Color(0, 0, 0, 60),      
-            new Color(0, 0, 0, 240)      
-        };
-        RadialGradientPaint p = new RadialGradientPaint(center, radius, dist, colors);
-        g2d.setPaint(p);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // A. Reflet du verre bombé (Glass Glare)
+        g2d.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 10), w * 0.45f, h * 0.45f, new Color(255, 255, 255, 0)));
         g2d.fillRect(0, 0, w, h);
-        
+
+        // B. Ombrage de vignetage souple aux 4 coins (sans coins noirs bloquants)
+        int cornerRadius = (int) (Math.min(w, h) * CRT_CORNER_RADIUS_RATIO);
+        if (cornerRadius > 0) {
+            g2d.setPaint(new RadialGradientPaint(
+                    new Point2D.Float(0, 0), cornerRadius,
+                    new float[]{0.0f, 0.6f, 1.0f},
+                    new Color[]{new Color(0, 0, 0, 100), new Color(0, 0, 0, 40), new Color(0, 0, 0, 0)}
+            ));
+            g2d.fillRect(0, 0, cornerRadius, cornerRadius);
+
+            g2d.setPaint(new RadialGradientPaint(
+                    new Point2D.Float(w, 0), cornerRadius,
+                    new float[]{0.0f, 0.6f, 1.0f},
+                    new Color[]{new Color(0, 0, 0, 100), new Color(0, 0, 0, 40), new Color(0, 0, 0, 0)}
+            ));
+            g2d.fillRect(w - cornerRadius, 0, cornerRadius, cornerRadius);
+
+            g2d.setPaint(new RadialGradientPaint(
+                    new Point2D.Float(0, h), cornerRadius,
+                    new float[]{0.0f, 0.6f, 1.0f},
+                    new Color[]{new Color(0, 0, 0, 100), new Color(0, 0, 0, 40), new Color(0, 0, 0, 0)}
+            ));
+            g2d.fillRect(0, h - cornerRadius, cornerRadius, cornerRadius);
+
+            g2d.setPaint(new RadialGradientPaint(
+                    new Point2D.Float(w, h), cornerRadius,
+                    new float[]{0.0f, 0.6f, 1.0f},
+                    new Color[]{new Color(0, 0, 0, 100), new Color(0, 0, 0, 40), new Color(0, 0, 0, 0)}
+            ));
+            g2d.fillRect(w - cornerRadius, h - cornerRadius, cornerRadius, cornerRadius);
+        }
+
         g2d.dispose();
     }
+
     private void drawCharacterCreationScreen(Graphics2D g2d, float scale) {
         int w = getWidth();
         int h = getHeight();
+        int boxW = (int) (w * 0.78);
+        int boxH = (int) (h * 0.78);
+        int bx = (w - boxW) / 2;
+        int by = (h - boxH) / 2;
 
+        // Fond Noir uni avec double bordure
         g2d.setColor(Color.BLACK);
-        g2d.fillRect(0, 0, w, h);
+        g2d.fillRect(bx, by, boxW, boxH);
 
-        int titleSize = Math.max(16, (int) (32 * scale));
-        int subtitleSize = Math.max(14, (int) (22 * scale));
-        int textSize = Math.max(12, (int) (18 * scale));
-        int smallTextSize = Math.max(10, (int) (14 * scale));
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke((int) Math.max(1, 2 * scale)));
+        g2d.drawRect(bx, by, boxW, boxH);
+        int inset = (int) (4 * scale);
+        g2d.drawRect(bx + inset, by + inset, boxW - inset * 2, boxH - inset * 2);
+
+        int titleSize = Math.max(14, (int) (22 * scale));
+        int subtitleSize = Math.max(12, (int) (15 * scale));
+        int textSize = Math.max(10, (int) (13 * scale));
+        int smallTextSize = Math.max(8, (int) (11 * scale));
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, titleSize));
         g2d.setColor(Color.WHITE);
         String title = "CRÉATION DE PERSONNAGE";
         FontMetrics fmTitle = g2d.getFontMetrics();
-        g2d.drawString(title, (w - fmTitle.stringWidth(title)) / 2, (int)(h * 0.1));
+        g2d.drawString(title, bx + (boxW - fmTitle.stringWidth(title)) / 2, by + (int) (28 * scale));
 
-        int startY = (int)(h * 0.2);
-        int startX = w / 4;
-        int lineSpacing = Math.max(20, (int)(h * 0.05));
-        int labelWidth = (int)(180 * scale);
+        int startY = by + (int) (55 * scale);
+        int startX = bx + (int) (50 * scale);
+        int lineSpacing = Math.max(15, (int) (22 * scale));
+        int labelWidth = (int) (150 * scale);
 
         com.eltim.rogue.system.CharacterCreationSystem.Field currentField = com.eltim.rogue.system.CharacterCreationSystem.getCurrentField();
 
@@ -823,11 +973,11 @@ public class renderer extends JPanel {
 
         drawCreationLine(g2d, startX, currentY, labelWidth, "Race:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getRace().getDisplayName() + " >", currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.RACE);
         currentY += lineSpacing;
-        
+
         g2d.setFont(new Font("Monospaced", Font.ITALIC, smallTextSize));
         g2d.setColor(Color.LIGHT_GRAY);
-        g2d.drawString("Compétence de race: " + com.eltim.rogue.system.CharacterCreationSystem.getRace().getSpecialSkillPlaceholder(), 
-                       startX + labelWidth, currentY - 5);
+        g2d.drawString("Compétence de race: " + com.eltim.rogue.system.CharacterCreationSystem.getRace().getSpecialSkillPlaceholder(),
+                startX + labelWidth, currentY - 3);
         currentY += lineSpacing;
 
         g2d.setFont(new Font("Monospaced", Font.PLAIN, textSize));
@@ -839,7 +989,7 @@ public class renderer extends JPanel {
         currentY += lineSpacing;
 
         drawCreationLine(g2d, startX, currentY, labelWidth, "Symbole:", com.eltim.rogue.system.CharacterCreationSystem.getSymbol() + (com.eltim.rogue.system.CharacterCreationSystem.isEditingSymbol() ? "_" : ""), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.SYMBOL);
-        currentY += lineSpacing * 2;
+        currentY += (int)(lineSpacing * 1.4);
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, subtitleSize));
         g2d.setColor(Color.WHITE);
@@ -849,23 +999,23 @@ public class renderer extends JPanel {
         g2d.setFont(new Font("Monospaced", Font.PLAIN, textSize));
 
         int bF = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusForce();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Force:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getForce() + " > (" + (bF>=0?"+":"") + bF + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getForce() + bF), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.FORCE);
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Force:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getForce() + " > (" + (bF >= 0 ? "+" : "") + bF + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getForce() + bF), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.FORCE);
         currentY += lineSpacing;
         int bA = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusAgilite();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Agilité:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getAgilite() + " > (" + (bA>=0?"+":"") + bA + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getAgilite() + bA), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.AGILITE);
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Agilité:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getAgilite() + " > (" + (bA >= 0 ? "+" : "") + bA + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getAgilite() + bA), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.AGILITE);
         currentY += lineSpacing;
         int bI = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusIntelligence();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Intelligence:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getIntelligence() + " > (" + (bI>=0?"+":"") + bI + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getIntelligence() + bI), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.INTELLIGENCE);
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Intelligence:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getIntelligence() + " > (" + (bI >= 0 ? "+" : "") + bI + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getIntelligence() + bI), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.INTELLIGENCE);
         currentY += lineSpacing;
         int bC = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusCharisme();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Charisme:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getCharisme() + " > (" + (bC>=0?"+":"") + bC + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getCharisme() + bC), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CHARISME);
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Charisme:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getCharisme() + " > (" + (bC >= 0 ? "+" : "") + bC + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getCharisme() + bC), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CHARISME);
         currentY += lineSpacing;
         int bCo = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusConstitution();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Constitution:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getConstitution() + " > (" + (bCo>=0?"+":"") + bCo + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getConstitution() + bCo), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONSTITUTION);
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Constitution:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getConstitution() + " > (" + (bCo >= 0 ? "+" : "") + bCo + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getConstitution() + bCo), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONSTITUTION);
         currentY += lineSpacing;
         int bS = com.eltim.rogue.system.CharacterCreationSystem.getRace().getBonusSagesse();
-        drawCreationLine(g2d, startX, currentY, labelWidth, "Sagesse:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getSagesse() + " > (" + (bS>=0?"+":"") + bS + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getSagesse() + bS), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.SAGESSE);
-        currentY += lineSpacing * 2;
+        drawCreationLine(g2d, startX, currentY, labelWidth, "Sagesse:", "< " + com.eltim.rogue.system.CharacterCreationSystem.getSagesse() + " > (" + (bS >= 0 ? "+" : "") + bS + ") = " + (com.eltim.rogue.system.CharacterCreationSystem.getSagesse() + bS), currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.SAGESSE);
+        currentY += (int)(lineSpacing * 1.4);
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, subtitleSize));
         if (currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONFIRM) {
@@ -887,6 +1037,92 @@ public class renderer extends JPanel {
         }
         g2d.setColor(isSelected ? Color.CYAN : Color.LIGHT_GRAY);
         g2d.drawString(value, x + labelWidth, y);
+    }
+
+    private void drawAudioMenu(Graphics2D g2d, float scale) {
+        int w = getWidth();
+        int h = getHeight();
+        int boxW = (int) (w * 0.78);
+        int boxH = (int) (h * 0.72);
+        int bx = (w - boxW) / 2;
+        int by = (h - boxH) / 2;
+
+        // Fond Noir uni avec double bordure
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(bx, by, boxW, boxH);
+
+        g2d.setColor(new Color(255, 215, 0)); // Jaune d'or
+        g2d.setStroke(new BasicStroke((int) Math.max(1, 2 * scale)));
+        g2d.drawRect(bx, by, boxW, boxH);
+        int inset = (int) (4 * scale);
+        g2d.drawRect(bx + inset, by + inset, boxW - inset * 2, boxH - inset * 2);
+
+        int fontTitle = Math.max(14, (int) (22 * scale));
+        int fontOpt = Math.max(11, (int) (15 * scale));
+        int fontSub = Math.max(9, (int) (12 * scale));
+
+        // Titre
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontTitle));
+        FontMetrics fmTitle = g2d.getFontMetrics();
+        String title = "=== OPTIONS AUDIO & REGULATEUR DE SON ===";
+        g2d.setColor(new Color(255, 215, 0));
+        g2d.drawString(title, bx + (boxW - fmTitle.stringWidth(title)) / 2, by + (int) (35 * scale));
+
+        // Sous-titre explicatif
+        g2d.setFont(new Font("Monospaced", Font.ITALIC, fontSub));
+        g2d.setColor(Color.LIGHT_GRAY);
+        String sub = "Utilisez [Z/S] pour naviguer, [Q/D] pour ajuster le volume";
+        FontMetrics fmSub = g2d.getFontMetrics();
+        g2d.drawString(sub, bx + (boxW - fmSub.stringWidth(sub)) / 2, by + (int) (62 * scale));
+
+        // Séparateur
+        g2d.setColor(Color.GRAY);
+        g2d.drawLine(bx + (int) (20 * scale), by + (int) (75 * scale), bx + boxW - (int) (20 * scale), by + (int) (75 * scale));
+
+        com.eltim.rogue.engine.sound.SoundManager soundMgr = com.eltim.rogue.engine.sound.SoundManager.getInstance();
+        int sel = game.getAudioSelectedOption();
+
+        int startY = by + (int) (110 * scale);
+        int itemSpacing = (int) (40 * scale);
+
+        drawAudioSliderLine(g2d, scale, bx + (int) (40 * scale), startY, "SON TOTAL (MASTER)", soundMgr.getMasterVolume(), sel == 0);
+        drawAudioSliderLine(g2d, scale, bx + (int) (40 * scale), startY + itemSpacing, "MUSIQUE & AMBIANCE", soundMgr.getMusicVolume(), sel == 1);
+        drawAudioSliderLine(g2d, scale, bx + (int) (40 * scale), startY + itemSpacing * 2, "EFFETS SONORES (VFX)", soundMgr.getSfxVolume(), sel == 2);
+
+        // Bouton Retour
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontOpt));
+        int retY = startY + itemSpacing * 3 + (int) (10 * scale);
+        if (sel == 3) {
+            g2d.setColor(Color.YELLOW);
+            g2d.drawString("=> [ FERMER ET REVENIR AU JEU ]", bx + (int) (40 * scale), retY);
+        } else {
+            g2d.setColor(Color.LIGHT_GRAY);
+            g2d.drawString("   [ FERMER ET REVENIR AU JEU ]", bx + (int) (40 * scale), retY);
+        }
+    }
+
+    private void drawAudioSliderLine(Graphics2D g2d, float scale, int x, int y, String label, float value, boolean isSelected) {
+        int fontOpt = Math.max(11, (int) (15 * scale));
+        g2d.setFont(new Font("Monospaced", Font.BOLD, fontOpt));
+
+        String prefix = isSelected ? "=> " : "   ";
+        g2d.setColor(isSelected ? Color.YELLOW : Color.WHITE);
+        g2d.drawString(prefix + String.format("%-22s", label) + " : ", x, y);
+
+        // Dessin de la barre de volume slider [========  ]
+        int pct = Math.round(value * 100);
+        int barLength = 16;
+        int filled = Math.round(value * barLength);
+
+        StringBuilder barStr = new StringBuilder("[");
+        for (int i = 0; i < barLength; i++) {
+            if (i < filled) barStr.append("=");
+            else barStr.append(" ");
+        }
+        barStr.append("] ").append(String.format("%3d%%", pct));
+
+        g2d.setColor(isSelected ? Color.CYAN : Color.GREEN);
+        g2d.drawString(barStr.toString(), x + (int) (310 * scale), y);
     }
 
     private void drawInventoryScreen(Graphics2D g2d, float scale) {
