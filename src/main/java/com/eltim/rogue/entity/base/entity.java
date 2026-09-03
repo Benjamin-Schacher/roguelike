@@ -19,6 +19,7 @@ public abstract class entity {
     protected int maxMana = 5;
     protected int xp = 0;
     protected int level = 1;
+    protected int gold = 0;
     protected int physicalDefence = 10;
     protected int magicalDefence = 10;
     
@@ -114,11 +115,48 @@ public abstract class entity {
     }
 
     public List<alteration> getAlterationList() {
+        if (alterationList == null) alterationList = new java.util.ArrayList<>();
         return alterationList;
     }
 
     public void setAlterationList(List<alteration> alterationList) {
         this.alterationList = alterationList;
+    }
+
+    public void addAlteration(alteration a) {
+        if (a == null) return;
+        if (alterationList == null) alterationList = new java.util.ArrayList<>();
+        for (alteration existing : alterationList) {
+            if (existing.getName().equalsIgnoreCase(a.getName())) {
+                existing.setDuration(Math.max(existing.getDuration(), a.getDuration()));
+                return;
+            }
+        }
+        alterationList.add(a);
+    }
+
+    public void removeAlteration(alteration a) {
+        if (alterationList != null) alterationList.remove(a);
+    }
+
+    public void clearAlterations() {
+        if (alterationList != null) alterationList.clear();
+    }
+
+    public List<alteration> getBuffs() {
+        List<alteration> buffs = new java.util.ArrayList<>();
+        for (alteration a : getAlterationList()) {
+            if (a.getType() == alteration.Type.BUFF) buffs.add(a);
+        }
+        return buffs;
+    }
+
+    public List<alteration> getDebuffs() {
+        List<alteration> debuffs = new java.util.ArrayList<>();
+        for (alteration a : getAlterationList()) {
+            if (a.getType() == alteration.Type.MALUS) debuffs.add(a);
+        }
+        return debuffs;
     }
 
     public void setMaxLifePoint(int maxLifePoint) {
@@ -182,13 +220,44 @@ public abstract class entity {
         this.resistanceList = resistanceList;
     }
 
+    public int getGold() { return gold; }
+    public void setGold(int gold) { this.gold = gold; }
+    public void addGold(int amount) { this.gold += amount; }
+
     public void addWeakness(weakness w) {
-        this.weaknessList.add(w);
+        if (this.weaknessList != null) {
+            this.weaknessList.add(w);
+        }
     }
 
     public void addResistance(weakness res) {
-        this.resistanceList.add(res);
-    }    
+        if (this.resistanceList != null) {
+            this.resistanceList.add(res);
+        }
+    }
 
-    
+    protected long stunnedUntilTime = 0;
+    protected String soundName;
+
+    public String getSoundName() {
+        return soundName;
+    }
+
+    public void setSoundName(String soundName) {
+        this.soundName = soundName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends entity> T withSound(String soundName) {
+        this.soundName = soundName;
+        return (T) this;
+    }
+
+    public void stunForMillis(long millis) {
+        this.stunnedUntilTime = System.currentTimeMillis() + millis;
+    }
+
+    public boolean isStunned() {
+        return System.currentTimeMillis() < stunnedUntilTime;
+    }
 }

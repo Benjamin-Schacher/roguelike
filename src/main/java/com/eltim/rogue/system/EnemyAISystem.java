@@ -16,6 +16,7 @@ public class EnemyAISystem {
         for (entity e : currentMap.getEntities()) {
             if (e instanceof monster) {
                 monster m = (monster) e;
+                if (m.isStunned()) continue;
                 
                 // Portée de poursuite : 3 cases minimum + modificateur de Sagesse (si positif)
                 int sagMod = diceRollSysteme.getModifier(m.getSagesse());

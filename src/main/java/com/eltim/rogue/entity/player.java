@@ -6,14 +6,13 @@ import java.util.List;
 import com.eltim.rogue.entity.base.entity;
 import com.eltim.rogue.entity.classe.classe;
 import com.eltim.rogue.entity.summon.summon;
-import com.eltim.rogue.item.weapon;
-import com.eltim.rogue.item.equipement;
 import com.eltim.rogue.item.base.item;
-
+import com.eltim.rogue.system.ExplorationLog;
 
 public class player extends entity {
 
     public classe classe;
+    private boolean pendingSubclassChoice = false;
 
     private List<item> inventory = new ArrayList<>();
     public List<item> getInventory() { return inventory; }
@@ -25,8 +24,8 @@ public class player extends entity {
     public player(int x, int y) {
         super(x, y, '@');
         this.name = "Le Héros";
+        this.soundName = "medieval-fantasy/9";
     }
-
 
     public void addLoot(item i) {
         this.inventory.add(i);
@@ -75,6 +74,43 @@ public class player extends entity {
         this.classe = c;
         if (this.classe != null && this.classe.skillPoints < 2) {
             this.classe.skillPoints = 2;
+        }
+    }
+
+    public boolean isPendingSubclassChoice() {
+        return pendingSubclassChoice;
+    }
+
+    public void setPendingSubclassChoice(boolean pending) {
+        this.pendingSubclassChoice = pending;
+    }
+
+    @Override
+    public void addXp(int amount) {
+        this.xp += amount;
+        checkLevelUp();
+    }
+
+    public void checkLevelUp() {
+        int xpForNext = this.level * 100;
+        while (this.xp >= xpForNext) {
+            this.xp -= xpForNext;
+            this.level++;
+            this.maxLifePoint += 5;
+            this.lifePoint = this.maxLifePoint;
+            this.maxMana += 3;
+            this.mana = this.maxMana;
+
+            if (this.classe != null) {
+                this.classe.gainLevelPoints();
+            }
+
+            if (this.level >= 3 && this.classe != null && !this.classe.hasSubclass() && !this.classe.hasRefusedSubclass) {
+                this.pendingSubclassChoice = true;
+            }
+
+            ExplorationLog.addLog("LEVEL UP ! Vous atteignez le niveau " + this.level + " !");
+            xpForNext = this.level * 100;
         }
     }
 }

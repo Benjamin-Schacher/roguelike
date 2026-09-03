@@ -21,6 +21,7 @@ public class game {
         PLAYING,
         INVENTORY,
         SKILL_MENU,
+        SUBCLASS_SELECTION,
         DESCRIPTION,
         GAME_OVER,
         AUDIO_MENU
@@ -127,6 +128,13 @@ public class game {
                 combatSysteme.tick();
             }
 
+            // Vérification de bi-classement au niveau 3
+            if (state == GameState.PLAYING && player != null && player.isPendingSubclassChoice() && !combatSysteme.isCombatOpen() && !InteractionSysteme.isMenuOpen()) {
+                com.eltim.rogue.system.SubclassSelectionSystem.open(player);
+                state = GameState.SUBCLASS_SELECTION;
+                inputHandler.clear();
+            }
+
             // Vérifie si le joueur est mort après chaque action (combat terminé)
             if (state == GameState.PLAYING && player.isDead()) {
                 state = GameState.GAME_OVER;
@@ -151,6 +159,16 @@ public class game {
             return;
         }
 
+        // --- État SOUS-CLASSE (Niveau 3) ---
+        if (state == GameState.SUBCLASS_SELECTION) {
+            com.eltim.rogue.system.SubclassSelectionSystem.handleInput(key);
+            if (com.eltim.rogue.system.SubclassSelectionSystem.isDone()) {
+                state = GameState.PLAYING;
+                inputHandler.clear();
+            }
+            return;
+        }
+
         // --- État DESCRIPTION : Entrée pour fermer ---
         if (state == GameState.DESCRIPTION) {
             if (key.getKeyCode() == KeyEvent.VK_ENTER || key.getKeyCode() == KeyEvent.VK_ESCAPE) {
@@ -162,6 +180,13 @@ public class game {
 
         // --- État SKILL_MENU : navigation dans les compétences ---
         if (state == GameState.SKILL_MENU) {
+            if (com.eltim.rogue.system.SkillMenuSystem.isSelectingTree()) {
+                // En mode modal de choix d'arbre, Échap annule le modal au lieu de fermer tout le menu
+                if (player != null && player.classe != null) {
+                    com.eltim.rogue.system.SkillMenuSystem.handleInput(key, player.classe);
+                }
+                return;
+            }
             if (key.getKeyCode() == KeyEvent.VK_K || key.getKeyCode() == KeyEvent.VK_ESCAPE) {
                 state = GameState.PLAYING;
                 return;

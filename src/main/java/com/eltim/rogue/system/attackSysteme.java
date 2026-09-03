@@ -40,7 +40,15 @@ public class attackSysteme {
         }
 
         if (attackRoll >= targetDefense) {
-            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("hit");
+            String soundToPlay = null;
+            if (w != null && w.getSoundName() != null && !w.getSoundName().isEmpty()) {
+                soundToPlay = w.getSoundName();
+            } else if (attacker != null && attacker.getSoundName() != null && !attacker.getSoundName().isEmpty()) {
+                soundToPlay = attacker.getSoundName();
+            } else {
+                soundToPlay = "hit";
+            }
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX(soundToPlay);
             combatSysteme.getLog().add("> " + attacker.getName() + " utilise [" + weaponName + "] (Jet d" + diceSides + ": " + roll + " " + modSign + " = " + attackRoll + " vs DEF " + targetDefense + ") -> TOUCHE !");
             damageSysteme.doDamageWithWeapon(attacker, target, w, false);
             return true;

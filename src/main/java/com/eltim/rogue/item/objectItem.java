@@ -87,7 +87,9 @@ public class objectItem extends item {
 
         // 2. Dégâts de poison / sur la durée (ex: Fiole de poison)
         if (tempDamageOverTime > 0) {
-            int dmg = tempDamageOverTime * Math.max(1, durationTurns);
+            int turns = Math.max(2, durationTurns);
+            target.addAlteration(new com.eltim.rogue.alteration.alteration("Poison", com.eltim.rogue.alteration.alteration.Type.MALUS, turns, tempDamageOverTime));
+            int dmg = tempDamageOverTime * 2;
             target.setLifePoint(Math.max(0, target.getLifePoint() - dmg));
             return;
         }
@@ -98,16 +100,20 @@ public class objectItem extends item {
                 try {
                     int val = Integer.parseInt(buffEffect.substring(7).trim());
                     target.setForce(Math.max(1, target.getForce() + val));
+                    target.addAlteration(new com.eltim.rogue.alteration.alteration("Jet de Sable", com.eltim.rogue.alteration.alteration.Type.MALUS, 3, val));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else if (buffEffect.equals("weaken_all")) {
                 target.setForce(Math.max(1, target.getForce() - 2));
                 target.setAgilite(Math.max(1, target.getAgilite() - 2));
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Affaibli", com.eltim.rogue.alteration.alteration.Type.MALUS, 3, -2));
             } else if (buffEffect.startsWith("team_defense_")) {
                 target.setConstitution(target.getConstitution() + 1);
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Protection", com.eltim.rogue.alteration.alteration.Type.BUFF, 3, 1));
             } else if (buffEffect.contains("resistance")) {
                 target.setConstitution(target.getConstitution() + 2);
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Résistance", com.eltim.rogue.alteration.alteration.Type.BUFF, 3, 2));
             }
         }
     }

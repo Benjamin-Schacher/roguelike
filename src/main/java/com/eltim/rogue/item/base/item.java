@@ -135,6 +135,22 @@ public class item {
         return true;
     }
 
+    protected String soundName;
+
+    public String getSoundName() {
+        return soundName;
+    }
+
+    public void setSoundName(String soundName) {
+        this.soundName = soundName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends item> T withSound(String soundName) {
+        this.soundName = soundName;
+        return (T) this;
+    }
+
     public void applyEffect(entity e) {
         // Effet de base (à redéfinir dans les sous-classes)
     }

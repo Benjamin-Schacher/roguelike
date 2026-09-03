@@ -12,6 +12,7 @@ public class Skill {
     public final String tree; // Nom de l'arbre parent
 
     public boolean unlocked = false;
+    public String soundName;
 
     public Skill(String id, String name, String description, int tier, String tree) {
         this.id = id;
@@ -19,5 +20,10 @@ public class Skill {
         this.description = description;
         this.tier = tier;
         this.tree = tree;
+    }
+
+    public Skill withSound(String soundName) {
+        this.soundName = soundName;
+        return this;
     }
 }

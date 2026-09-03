@@ -143,11 +143,19 @@ public class InteractionSysteme {
                 return; // Ignorer l'appui sur Entrée s'il survient trop rapidement après l'ouverture du menu
             }
             String action = options.get(selection);
-            System.out.println("Action choisie : " + action);
-            
+            executeAction(action);
+        } else if (key.getKeyCode() == KeyEvent.VK_ESCAPE) {
             menuOpen = false;
-            
-            if (action.equals("Combattre") || action.equals("Utiliser un objet")) {
+            menuTarget = null;
+            menuAttacker = null;
+        }
+    }
+
+    public static void executeAction(String action) {
+        System.out.println("Action choisie : " + action);
+        menuOpen = false;
+
+        if (action.equals("Combattre") || action.equals("Utiliser un objet")) {
                 List<entity> enemies = findMonsterGroup(menuAttacker, menuTarget, currentMap);
                 combatSysteme.startCombat(menuAttacker, enemies, currentMap);
             } else if (action.equals("Recruter")) {
@@ -252,12 +260,25 @@ public class InteractionSysteme {
                         if (text.contains("karin")) {
                             if (p.getBelief() == com.eltim.rogue.entity.base.Belief.KARIN) {
                                 if (currentMap != null) {
+                                    door cellDoor = null;
+                                    double minDistance = Double.MAX_VALUE;
                                     for (entity e : currentMap.getEntities()) {
                                         if (e instanceof door) {
                                             door d = (door) e;
-                                            d.setState(doorStateEnum.OPEN);
-                                            d.setSymbol('D');
+                                            if (d.getState() == doorStateEnum.OLD) {
+                                                cellDoor = d;
+                                                break;
+                                            }
+                                            double dist = Math.hypot(d.getX() - it.getX(), d.getY() - it.getY());
+                                            if (dist < minDistance) {
+                                                minDistance = dist;
+                                                cellDoor = d;
+                                            }
                                         }
+                                    }
+                                    if (cellDoor != null) {
+                                        cellDoor.setState(doorStateEnum.OPEN);
+                                        cellDoor.setSymbol('D');
                                     }
                                 }
                                 ExplorationLog.addDescription("Succès : Le gond de la porte lâche, usé par la vieillesse ! La porte s'ouvre !");
@@ -269,17 +290,50 @@ public class InteractionSysteme {
                         }
                     }
                 }
+            } else if (action.equals("Fuir")) {
+                List<entity> enemies = findMonsterGroup(menuAttacker, menuTarget, currentMap);
+                int playerDexMod = diceRollSysteme.getModifier(menuAttacker.getAgilite());
+                int playerRoll = (int) (Math.random() * 20) + 1;
+                int playerTotal = playerRoll + playerDexMod;
+
+                int maxEnemyDex = 10;
+                entity fastestEnemy = null;
+                for (entity e : enemies) {
+                    if (!e.isDead() && e.getAgilite() >= maxEnemyDex) {
+                        maxEnemyDex = e.getAgilite();
+                        fastestEnemy = e;
+                    }
+                }
+                if (fastestEnemy == null && menuTarget != null) {
+                    fastestEnemy = menuTarget;
+                    maxEnemyDex = menuTarget.getAgilite();
+                }
+
+                int enemyDexMod = diceRollSysteme.getModifier(maxEnemyDex);
+                int enemyRoll = (int) (Math.random() * 20) + 1;
+                int enemyTotal = enemyRoll + enemyDexMod;
+                String enemyName = (fastestEnemy != null && fastestEnemy.getName() != null) ? fastestEnemy.getName() : "Ennemi";
+
+                boolean success = (playerTotal >= enemyTotal);
+
+                ExplorationLog.add("« Fuite : Joueur " + playerTotal + " vs " + enemyName + " " + enemyTotal + " — " + (success ? "Succès" : "Échec") + " »");
+
+                if (success) {
+                    ExplorationLog.addDescription("FUITE RÉUSSIE ! Ennemis étourdis (5s).");
+                    for (entity e : enemies) {
+                        e.stunForMillis(5000);
+                    }
+                    menuOpen = false;
+                } else {
+                    ExplorationLog.addDescription("FUITE ÉCHOUÉE ! Combat engagé (1er tour perdu) !");
+                    combatSysteme.startCombat(menuAttacker, enemies, currentMap, true);
+                }
             } else if (action.equals("Fermer") || action.equals("Partir") || action.equals("Quitter")) {
                 menuOpen = false;
             }
             
             menuTarget = null;
             menuAttacker = null;
-        } else if (key.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            menuOpen = false;
-            menuTarget = null;
-            menuAttacker = null;
-        }
     }
 
     public static boolean isMenuOpen() { return menuOpen; }

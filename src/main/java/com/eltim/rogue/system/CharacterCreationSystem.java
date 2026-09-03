@@ -5,12 +5,40 @@ import com.eltim.rogue.entity.base.Gender;
 import com.eltim.rogue.entity.base.Race;
 import com.eltim.rogue.entity.classe.classe;
 import com.eltim.rogue.entity.classe.warriorClasse;
+import com.eltim.rogue.entity.classe.rogueClasse;
+import com.eltim.rogue.entity.classe.mageClasse;
+import com.eltim.rogue.entity.classe.archerClasse;
+import com.eltim.rogue.entity.classe.priestClasse;
 
 import java.awt.event.KeyEvent;
 
 public class CharacterCreationSystem {
 
+    public enum BaseClassChoice {
+        GUERRIER("Guerrier"),
+        VOLEUR("Voleur"),
+        MAGE("Mage"),
+        ARCHER("Archer"),
+        PRETRE("Prêtre");
+
+        private final String displayName;
+        BaseClassChoice(String displayName) { this.displayName = displayName; }
+        public String getDisplayName() { return displayName; }
+
+        public classe createInstance() {
+            switch (this) {
+                case GUERRIER: return new warriorClasse();
+                case VOLEUR: return new rogueClasse();
+                case MAGE: return new mageClasse();
+                case ARCHER: return new archerClasse();
+                case PRETRE: return new priestClasse();
+                default: return new warriorClasse();
+            }
+        }
+    }
+
     private static String name = "Heros";
+    private static BaseClassChoice baseClassChoice = BaseClassChoice.GUERRIER;
     private static Race race = Race.HUMAIN;
     private static Gender gender = Gender.MASCULIN;
     private static Belief belief = Belief.SANS_RELIGION;
@@ -23,6 +51,7 @@ public class CharacterCreationSystem {
 
     public enum Field {
         NAME("Nom"), 
+        CLASS("Classe"),
         RACE("Race"), 
         GENDER("Sexe"), 
         BELIEF("Croyance"), 
@@ -47,6 +76,8 @@ public class CharacterCreationSystem {
 
     public static void init() {
         name = "Heros";
+        baseClassChoice = BaseClassChoice.GUERRIER;
+        characterClass = baseClassChoice.createInstance();
         race = Race.HUMAIN;
         gender = Gender.MASCULIN;
         belief = Belief.SANS_RELIGION;
@@ -123,6 +154,10 @@ public class CharacterCreationSystem {
 
     private static void adjustField(int direction) {
         switch (currentField) {
+            case CLASS:
+                baseClassChoice = cycleEnum(BaseClassChoice.values(), baseClassChoice, direction);
+                characterClass = baseClassChoice.createInstance();
+                break;
             case RACE:
                 race = cycleEnum(Race.values(), race, direction);
                 validateStats();
@@ -162,16 +197,14 @@ public class CharacterCreationSystem {
         for (int i = 0; i < bases.length; i++) {
             int finalVal = bases[i] + bonuses[i];
             if (finalVal > 18) {
-                // Rembourser les points excédentaires
                 int excess = finalVal - 18;
                 bases[i] -= excess;
                 availablePoints += excess;
             } else if (finalVal < 6) {
-                // Forcer le minimum à 6 : on PREND des points (peut aller négatif si le joueur n'en a pas)
                 int deficit = 6 - finalVal;
                 bases[i] += deficit;
                 availablePoints -= deficit;
-                if (availablePoints < 0) availablePoints = 0; // Sécurité anti-négatif
+                if (availablePoints < 0) availablePoints = 0;
             }
         }
 
@@ -215,6 +248,7 @@ public class CharacterCreationSystem {
 
     // --- Getters ---
     public static String getName() { return name; }
+    public static BaseClassChoice getBaseClassChoice() { return baseClassChoice; }
     public static Race getRace() { return race; }
     public static Gender getGender() { return gender; }
     public static Belief getBelief() { return belief; }

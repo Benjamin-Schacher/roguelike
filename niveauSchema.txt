@@ -2,36 +2,59 @@
 
 un mélange de jrpg et de roguelike. Tant que le joueur na pas rencontrée la valkyrie a sa mort il revient toujours au début sinon il revient au camp de valkyrie. (idée de revenir en arrière en mode rembobinage en cas de mort) Une fois la valkyrie débloquer tu peux lui demander de s'auvegarder le poit a l'instant T dans le temps pour revenir ici a ta prochaine mort.
 
-prompte:
-systheme de fuite : teste de dex cotre la meilleur dex du groupe enemie, si réussi sort du menue et groupe ennemie stun pendant 5 seconde
 
+
+---------------------------------------- classe ----------------------------------------
 
 on va commencer a faire les classe: a chaque niveaux tu a 2 points a dépenser, les abiliter coute 1 et a partire du tier 3 comprie coute 2. chaque classe a 4 arbre de compétence en 5 tier chacun donc au total 20 compétence. Au niveau 5 on débloque la spétialiter mais ça on verra plus tard
+
+Au niveau 3 on peux choisir une sous classe et 2 abres de tallent dans celle ci. Mais si tu prend une bi classe tu n'as qu'un points de compétence par niveau.
+
+classe de base :
+    Guerrier :
+    Voleur :
+    Mage :
+    Archer :
+    Prêtre :
+Sous classe:
+    Mage-lame : Mage + guerrier
+    Rodeur : Voleur + Archer
+    Paladin : Prêtre + Guerrier
+    Moine : Voleur + prêtre
+    Artificier : Archer + mage
+    Chamane : Mage + pretre
+    Druide : Archer + Pretre
+    Breteur : Archer + guerrier
+    Assasin : Voleur + guerrier
+    Occulteur : Mage + Voleur
+
+
+
 classe guerrier:
 arbre maitre d'arme : 
-tier 1 "choissir son arme": choissiser une maitrise d'arme sur un type d'arme (relance de test de toucher sur le type d'arme en question)
-tier 2 "Habiliter exeptionnel": vous ne pouvez pas faire d'échec critique sur l'arme en question et vous in fliger un critique sur un 19 et un 20.
-tier 3 "Sans défaut": vous iniorer tout malus au jet de touche qui est forcement un d20
-tier 4 "Savoire martial": vous ajouter votre mod de Sag au dégat de l'arme (si il est positif)
-tier 5 "maitrise total": vous ignirer le fait de devoir utiliser 2 mains pour manier les armes du type choisit
+tier 1 "choissir son arme" passif bruitage: null : choissiser une maitrise d'arme sur un type d'arme (relance de test de toucher sur le type d'arme en question)
+tier 2 "Habiliter exeptionnel" passif bruitage: null : vous ne pouvez pas faire d'échec critique sur l'arme en question et vous in fliger un critique sur un 19 et un 20.
+tier 3 "Sans défaut" passif bruitage: null: vous iniorer tout malus au jet de touche qui est forcement un d20
+tier 4 "Savoire martial" passif bruitage: null: vous ajouter votre mod de Sag au dégat de l'arme (si il est positif)
+tier 5 "maitrise total" passif bruitage: null: vous ignirer le fait de devoir utiliser 2 mains pour manier les armes du type choisit
 arbre bête de guerre:
-tier 1 "constitution exeptionnel": ajouter un bonus de +2 a votre constitution et 10 point de vie
-tier 2 "Resistance au poisson": diviser par 2 les degat de poisson que vous recever
-tier 3 "Combat a main nue": ajouter votre constitition au degat quand vous frapper avec vos points (si elle n'est pas négative)
-tier 4 "second soufle": la première fois au combat que vous tomber a 0 pv vous regagner un nombre de pv égale a votre mod de constitution
-tier 5 "Resistance élémentaire": diviser par deux les dégat élémentaire que vous subisser.
+tier 1 "constitution exeptionnel" passif bruitage: null: ajouter un bonus de +2 a votre constitution et 10 point de vie
+tier 2 "Resistance au poisson" passif bruitage: null: diviser par 2 les degat de poisson que vous recever
+tier 3 "Combat a main nue" passif bruitage: null: ajouter votre constitition au degat quand vous frapper avec vos points (si elle n'est pas négative)
+tier 4 "second soufle" passif bruitage: null: la première fois au combat que vous tomber a 0 pv vous regagner un nombre de pv égale a votre mod de constitution
+tier 5 "Resistance élémentaire" passif bruitage: null: diviser par deux les dégat élémentaire que vous subisser.
 arbre technique de combat:
-tier 1 "Jet de sable" : l'adversaire toucher a un maluce de -2 pour toucher pendant 1d4+nombre de point dans l'arbre/tour.
-tier 2 "posture défensive" : Gagner un bonnus a la défence égale a votre sagesse (si elle est positif) pendant autant de tour que de points dans cette arbre
-tier 3 "Attaque d'empleur" : baleyer la première ligne ennemie accesible et frapper tout les adverser présent sur cette dernière. C'est dernier font un teste de dexteriter pour diviser les dégat par 2 (dex difficulter 12).
-tier 4 "Riposte" : quand un enemie vous attaque vous le frapper avec l'arme en main droite.
-tier 5 "étroudissement" : L'adversaire ciblée passe sont prochain tour. 
+tier 1 "Jet de sable" active bruitage: rpg-battle-system/2: l'adversaire toucher a un maluce de -2 pour toucher pendant 1d4+nombre de point dans l'arbre/tour.
+tier 2 "posture défensive" active bruitage: rpg-battle-system/9 : Gagner un bonnus a la défence égale a votre sagesse (si elle est positif) pendant autant de tour que de points dans cette arbre
+tier 3 "Attaque d'empleur" active bruitage: medieval-fantasy/woosh-2 : baleyer la première ligne ennemie accesible et frapper tout les adverser présent sur cette dernière. C'est dernier font un teste de dexteriter pour diviser les dégat par 2 (dex difficulter 12).
+tier 4 "Riposte" passif bruitage: null : quand un enemie vous attaque vous le frapper avec l'arme en main droite.
+tier 5 "étroudissement" active bruitage: prehistoric-platformer/wood-4 : L'adversaire ciblée passe sont prochain tour. 
 arbre berzerke:
-tier 1 "Vengance !" : Quand un adversaire vous fait perdre des pv vous avez un avantage sur votre prochaine attaque contre lui (lancer deux dée a la touche et prenez le meilleur) 
-tier 2 "Hurlement de guerrier" : vous est vos équipier gagner un bonnus d'attaque égale a votre modificateur de force pendant un nombre de tour égale au points dans cette arbre
-tier 3 "Frénézie meurtrière" : quand vous tuer un adversaire, vous gnger un bonus de touche et de dégat (+1 par énnemie abattue, marche sur les invocation)
-tier 4 "Hurlement de provocation" : pendant 1d4/tour les adversaire vous attaque en prioriter.
-tier 5 "Double attaque" : vous avez une action supplémentaire
+tier 1 "Vengance !" passif bruitage: null : Quand un adversaire vous fait perdre des pv vous avez un avantage sur votre prochaine attaque contre lui (lancer deux dée a la touche et prenez le meilleur) 
+tier 2 "Hurlement de guerrier" active bruitage: vrac/hurlemenent-de-rage : vous est vos équipier gagner un bonnus d'attaque égale a votre modificateur de force pendant un nombre de tour égale au points dans cette arbre
+tier 3 "Frénézie meurtrière" passif bruitage: null : quand vous tuer un adversaire, vous gnger un bonus de touche et de dégat (+1 par énnemie abattue, marche sur les invocation)
+tier 4 "Hurlement de provocation" active bruitage: vrac/hurlemenent-de-rage : pendant 1d4/tour les adversaire vous attaque en prioriter.
+tier 5 "Double attaque" passif bruitage: null : vous avez une action supplémentaire
 
 
 
@@ -54,20 +77,20 @@ commun : pas besoin de sagesse
 ---------------------
 arme commune : 
 
-epee = ("Épée", 1, 6, itemTypeEnum.SWORD, itemQualityTypeEnum.COMMON , weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1));
-arc = ("Arc", 1, 6, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1));
-dague = ("Dague", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1));
-bouclierBois = ("Bouclier en bois", 1, 4, itemTypeEnum.SHIELD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1));
-baton = ("Baton", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1));
-marteau = ("Marteau", 1, 6, itemTypeEnum.HAMMER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(1));
-hache2main = ("Hache a deux main", 1, 8, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(2));
-hache = ("Hache", 1, 6, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1));
-arcLong = ("Arc long", 1, 8, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, moyen, savoir(commun), cost(2));
+epee = ("Épée", 1, 6, itemTypeEnum.SWORD, itemQualityTypeEnum.COMMON , weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1), bruitage= medieval-fantasy/9);
+arc = ("Arc", 1, 6, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1), bruitage= vrac/arc);
+dague = ("Dague", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, leger, savoir(commun), cost(1), bruitage= medieval-fantasy/5);
+bouclierBois = ("Bouclier en bois", 1, 4, itemTypeEnum.SHIELD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1), bruitage= prehistoric-platformer/hit-2);
+baton = ("Baton", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, leger, savoir(commun), cost(1), bruitage= prehistoric-platformer/wood-1);
+marteau = ("Marteau", 1, 6, itemTypeEnum.HAMMER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(1), bruitage= medieval-fantasy/5);
+hache2main = ("Hache a deux main", 1, 8, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(2), bruitage= medieval-fantasy/10);
+hache = ("Hache", 1, 6, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, leger, savoir(commun), cost(1), bruitage= medieval-fantasy/10);
+arcLong = ("Arc long", 1, 8, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, moyen, savoir(commun), cost(2), bruitage= vrac/arc);
 
 potion de commune :
 
-LowHealpotion = ("Potion de soin mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.HEAL, cost(3));
-LowManaPotion = ("Potion de mana mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.MANA, cost(3));
+LowHealpotion = ("Potion de soin mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.HEAL, cost(3), bruitage= medieval-fantasy/1);
+LowManaPotion = ("Potion de mana mineur", 1, 4, itemTypeEnum.POTION, itemQualityTypeEnum.COMMON, potionTypeEnum.MANA, cost(3), bruitage= medieval-fantasy/2);
 
 equiepemnt de commune : 
 
@@ -80,33 +103,33 @@ plaqueDeCuir = ("Plaque de Cuir", buff.defense(2), itemTypeEnum.ARMOR, itemQuali
 
 objet de commune :
 
-dagueDeLancer = ("Dague de lancer", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.PIERCING, savoir(commun), cost(1));
-sacDeSable = ("Sac de sable", buff.attack(-2), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(commun), cost(0,25));
-bandage = ("Bandage", buff.heal(1), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(technique), cost(0,5));
-pierre = ("Pierre", 1, 2, damageTypeEnum.DISTANCE, attackeTypeEnum.BLUNT, savoir(commun), cost(0,1));
+dagueDeLancer = ("Dague de lancer", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.PIERCING, savoir(commun), cost(1), bruitage= medieval-fantasy/woosh-1);
+sacDeSable = ("Sac de sable", buff.attack(-2), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(commun), cost(0,25), bruitage= rpg-battle-system/2);
+bandage = ("Bandage", buff.heal(1), itemTypeEnum.OBJECT, itemQualityTypeEnum.COMMON, savoir(technique), cost(0,5), bruitage= medieval-fantasy/1);
+pierre = ("Pierre", 1, 2, damageTypeEnum.DISTANCE, attackeTypeEnum.BLUNT, savoir(commun), cost(0,1), bruitage= medieval-fantasy/woosh-2);
 
 
 ---------------------
 arme inhabituelle : 
 
-bouclierFer = ("Bouclier en fer", 1, 6, itemTypeEnum.SHIELD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, lourd, savoir(commun), cost(8));
-epee2main = ("Épée a deux main", 1, 8, itemTypeEnum.SWORD, itemQualityTypeEnum.UNCOMMON , weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(6));
-marteau2main = ("Marteau a deux main", 1, 8, itemTypeEnum.HAMMER, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.STOMPING, lourd, savoir(commun), cost(4));
-halebarde = ("Halebarde", 1, 10, itemTypeEnum.POLEARM, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(8));
-batonFerer = ("Baton férer", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(5));
-oldGrimoire = ("Grimoire poussiéreux", 1, 6, itemTypeEnum.BOOK, itemQualityTypeEnum.COMMON, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.BLUNT,leger, savoir(technique), cost(12));
-arbaleteHand = ("Arbalète de poing", 1, 6, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.DISTANCE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, lourd, savoir(technique), cost(10));
+bouclierFer = ("Bouclier en fer", 1, 6, itemTypeEnum.SHIELD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, lourd, savoir(commun), cost(8), bruitage= vrac/coup-metalique);
+epee2main = ("Épée a deux main", 1, 8, itemTypeEnum.SWORD, itemQualityTypeEnum.UNCOMMON , weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(6),bruitage= medieval-fantasy/10);
+marteau2main = ("Marteau a deux main", 1, 8, itemTypeEnum.HAMMER, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.STOMPING, lourd, savoir(commun), cost(4), bruitage= vrac/coup-metalique);
+halebarde = ("Halebarde", 1, 10, itemTypeEnum.POLEARM, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, lourd, savoir(commun), cost(8), bruitage= medieval-fantasy/10);
+batonFerer = ("Baton férer", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, twoHand(true), damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, moyen, savoir(commun), cost(5), bruitage= vrac/coup-metalique);
+oldGrimoire = ("Grimoire poussiéreux", 1, 6, itemTypeEnum.BOOK, itemQualityTypeEnum.COMMON, weaponTypeEnum.MAGIC, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.BLUNT,leger, savoir(technique), cost(12), bruitage= rpg-battle-system/2);
+arbaleteHand = ("Arbalète de poing", 1, 6, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.DISTANCE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, lourd, savoir(technique), cost(10), bruitage= vrac/Crossbow);
 
 potion inhabituelle :
 
-Healpotion = ("Potion de soin", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.HEAL, cost(6));
-ManaPotion = ("Potion de mana", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.MANA, cost(6));
-AgilityPotion = ("Potion d'agilité", agiliter(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
-StrengthPotion = ("Potion de force", force(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
-IntelligencePotion = ("Potion d'intelligence", intelligence(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
-ConstitutionPotion = ("Potion de constitution", constitution(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
-CharismaPotion = ("Potion de charisme", charisma(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
-SagessePotion = ("Potion de sagesse", sagesse(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8));
+Healpotion = ("Potion de soin", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.HEAL, cost(6), bruitage= rpg-battle-system/1);
+ManaPotion = ("Potion de mana", 2, 4, itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.MANA, cost(6), bruitage= rpg-battle-system/2);
+AgilityPotion = ("Potion d'agilité", agiliter(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/1);
+StrengthPotion = ("Potion de force", force(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/1);
+IntelligencePotion = ("Potion d'intelligence", intelligence(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/1);
+ConstitutionPotion = ("Potion de constitution", constitution(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/1);
+CharismaPotion = ("Potion de charisme", charisma(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/1);
+SagessePotion = ("Potion de sagesse", sagesse(+2), nbtour(3), itemTypeEnum.POTION, itemQualityTypeEnum.UNCOMMON, potionTypeEnum.BUFF, cost(8), bruitage= rpg-battle-system/3);
 
 equiepemnt inhabituelle : 
 
@@ -123,13 +146,13 @@ amuletteDeProtection = ("amulette de protection", buff.defense(1), itemTypeEnum.
 
 objet inhabituelle :
 
-shuriken = ("Shuriken", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.SHARPNESS, savoir(technique), cost(1));
-parcheminDeResistancePhysique = ("Parchemin de resistance physique", buff.resistance(physique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
-parcheminDeResistanceMagique = ("Parchemin de resistance magique", buff.resistance(magique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
-parcheminDeTraitDeFeu = ("Parchemin de trait de feu", 1, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.FIRE, savoir(mystique), cost(2));
-fioledepoison = ("Fiole de poison", temporaryDamage(1, nbTour(3)), damageTypeEnum.DISTANCE, attackeTypeEnum.POISON, savoir(commun), cost(2));
-fumigene = ("Fumigene", buff.equipe.defense(1, nbtour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5));
-fioledepoudreNoire = ("Fiole de poudre noire", 2, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(3));
+shuriken = ("Shuriken", 1, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.SHARPNESS, savoir(technique), cost(1), bruitage= medieval-fantasy/woosh-1);
+parcheminDeResistancePhysique = ("Parchemin de resistance physique", buff.resistance(physique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5), bruitage= rpg-battle-system/3);
+parcheminDeResistanceMagique = ("Parchemin de resistance magique", buff.resistance(magique), nbtour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5), bruitage= rpg-battle-system/3);
+parcheminDeTraitDeFeu = ("Parchemin de trait de feu", 1, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.FIRE, savoir(mystique), cost(2), bruitage= vrac/boule-de-feu);
+fioledepoison = ("Fiole de poison", temporaryDamage(1, nbTour(3)), damageTypeEnum.DISTANCE, attackeTypeEnum.POISON, savoir(commun), cost(2), bruitage= vrac/Verre-casser);
+fumigene = ("Fumigene", buff.equipe.defense(1, nbtour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.UNCOMMON, savoir(technique), cost(5), bruitage= rpg-battle-system/37);
+fioledepoudreNoire = ("Fiole de poudre noire", 2, 4, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(3), bruitage= western-fps-2d/explosion-1);
 
 ----------------------
 arme rare : 
@@ -142,15 +165,15 @@ arbalete = ("Arbalète", 1, 12, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.RARE,
 
 potion rare :
 
-BigHealpotion = ("Grande Potion de soin", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.HEAL, cost(15));
-BigManaPotion = ("Grande Potion de mana", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.MANA, cost(15));
-PotiondeResistanceAuFeu = ("Potion de resistance au feu", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuFroid = ("Potion de resistance au froid", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuPoison = ("Potion de resistance au poison", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuDistance = ("Potion de resistance au distance", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuPhysique = ("Potion de resistance au physique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuMagique = ("Potion de resistance au magique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
-PotiondeResistanceAuExplosion = ("Potion de resistance au explosion", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10));
+BigHealpotion = ("Grande Potion de soin", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.HEAL, cost(15), bruitage= rpg-battle-system/1);
+BigManaPotion = ("Grande Potion de mana", 3, 4, itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.MANA, cost(15), bruitage= rpg-battle-system/2);
+PotiondeResistanceAuFeu = ("Potion de resistance au feu", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuFroid = ("Potion de resistance au froid", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuPoison = ("Potion de resistance au poison", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuDistance = ("Potion de resistance au distance", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuPhysique = ("Potion de resistance au physique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuMagique = ("Potion de resistance au magique", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
+PotiondeResistanceAuExplosion = ("Potion de resistance au explosion", buff.resistance(2, nbTour(5)), itemTypeEnum.POTION, itemQualityTypeEnum.RARE, potionTypeEnum.BUFF, cost(10), bruitage= rpg-battle-system/3);
 
 equiepemnt rare : 
 
@@ -162,22 +185,22 @@ colierDeRégenération = ("Colier de régénération", buff.mana.endTurn(1), ite
 
 objet rare :
 
-grenade = ("Grenade", 5, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(10));
-parcheminDefaiblissement = ("Parchemin de défaiblissement", buff.weaken(all, nbTour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(10));
-parcheminDeResistanceElementaire = ("Parchemin de resistance elementaire", buff.resistance(elementaire.all), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(20));
+grenade = ("Grenade", 5, 6, damageTypeEnum.DISTANCE, attackeTypeEnum.EXPLOSION, savoir(technique), cost(10), bruitage= western-fps-2d/explosion-3);
+parcheminDefaiblissement = ("Parchemin de défaiblissement", buff.weaken(all, nbTour(3)), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(10), bruitage= rpg-battle-system/3);
+parcheminDeResistanceElementaire = ("Parchemin de resistance elementaire", buff.resistance(elementaire.all), nbTour(3), itemTypeEnum.OBJECT, itemQualityTypeEnum.RARE, savoir(technique), cost(20), bruitage= rpg-battle-system/3);
 
 ----------------------
 arme légendaire : 
 
-lakua = ("La kua", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100));
-lacoubee = ("La coubée", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100));
-dagueAllusiner = ("Dague hallucinée", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.PIERCING, leger, savoir(mystique), cost(100), touche.autosuccess);
-bouclierdesoufrance = ("Bouclier de souffrance", buff.damagereturn(4), itemTypeEnum.SHIELD, itemQualityTypeEnum.LEGENDARY, moyen, cost(100));
+lakua = ("La kua", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100), bruitage=medieval-fantasy/10);
+lacoubee = ("La coubée", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, moyen, savoir(commun), cost(100), bruitage=medieval-fantasy/10);
+dagueAllusiner = ("Dague hallucinée", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, twoHand(false), damageTypeEnum.MAGICAL, attackeTypeEnum.PIERCING, leger, savoir(mystique), cost(100), touche.autosuccess, bruitage=medieval-fantasy/10);
+bouclierdesoufrance = ("Bouclier de souffrance", buff.damagereturn(4), itemTypeEnum.SHIELD, itemQualityTypeEnum.LEGENDARY, moyen, cost(100), bruitage=medieval-fantasy/10);
 
 potion légendaire :
 
-ExellentHealpotion = ("Potion de soin ultime", heal(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(30));
-ExellentManaPotion = ("Potion de mana ultime", mana(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.MANA, cost(30));
+ExellentHealpotion = ("Potion de soin ultime", heal(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(30), bruitage=rpg-battle-system/1);
+ExellentManaPotion = ("Potion de mana ultime", mana(max), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.MANA, cost(30), bruitage=rpg-battle-system/2);
 
 equiepemnt légendaire : 
 
@@ -186,7 +209,7 @@ armureEthere = ("Armure Ether", buff.defense(5), itemTypeEnum.ARMOR, itemQuality
 
 objet légendaire :
 
-potionderesurection = ("Potion de resurrection", heal(max), resurrection(true), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(100));
+potionderesurection = ("Potion de resurrection", heal(max), resurrection(true), itemTypeEnum.POTION, itemQualityTypeEnum.LEGENDARY, potionTypeEnum.HEAL, cost(100), bruitage=rpg-battle-system/1);
 
 
 
@@ -203,9 +226,382 @@ néanmoins certain coffre spéciale pourrons contenir des loot précis spécialm
 
 Quand c'est le tour d'un joueur il peux en plus de sont action d'attaque principal / secondaire / fuire / lancer un sort, il peux en plus de l'une de ses action utiliser un et un seul objet dans son inventaire. (tout les personnage partage le meme inventaire, un inventaire du groupe)
 
+états en combat :
+    empoisonné : inflige 1d4 de dégats toutes les X secondes
+    brulé : inflige 1d6 de dégats toutes les X secondes et diminue la constitution de 1.
+    ralenti : diviser l'initiative par deux.
+    aveugle : diminue la viser de 50%.
+    paralyser : unable de bouger.
+    invisble : ne peux pas etre ciblé.
+    bloqué: unable d'attaquer.
+    piégé: unable de bouger.
+    enfuite : unable d'attaquer.
+    enragé : +50% de degat, mais moins precis.
+    étourdi : incapable de bouger et d'attaquer.
+    charme : force l'ennemie a attaqué c'est allier.
+    peur : force l'ennemie a fuire.
+    froid : diminue la constitution de 1.
+    feux : inflige 1d4 de dégats toutes les X secondes et diminue la constitution de 1.
+    sang : inflige 1d4 de dégats toutes les X secondes.
+    poison : inflige 1d4 de dégats toutes les X secondes.
+    
+
+---------------------------------------- Sons ----------------------------------------
+
+raté:
+critique:
+fuite:
+Environnement :
+    Porte métalique :
+    Porte de bois :
+    Crie d'homme : 
+    Crie de femme :
 
 
+---------------------------------------- compagnons ----------------------------------------
+
+Célestin :
 
 
+---------------------------------------- fiche de monstre ----------------------------------------
 
+Garde mort vivant :
+    lvl : 1
+    symbole:'A'
+    color:'red'
+    bruitage : sfx\NPC\shade\shade12
+    stats : 
+        vie : 18
+        force : 11
+        agiliter : 7
+        constitution : 18
+        intelligence : 2
+        sagesse : 2
+        charisme : 8
+    armes potentiels :
+        main droite : [Épée, Arc, Dague]
+    capaciter : 
+        insensible : réduction des degats par deux.
+    loot :
+        or : 0,1
+        item : [bandage, Épée, Arc, bottesCuir, cuissardesCuir, gantCuir, plaqueDeCuir, pierre ] 
+    description : Un ancien garde de Cead Nua transformé en mort vivant, errant dans les ruines de la forteresse en quête de chair fraiche.
+    xp : 10
+    ia : frappe un ennemie au hazard
 
+Squelette : 
+    lvl : 1
+    symbole:'S'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\stomp_01
+    stats : 
+        vie : 6
+        force : 6
+        agiliter : 14
+        constitution : 18
+        intelligence : 6
+        sagesse : 2
+        charisme : 12
+    armes potentiels :
+        main droite : [Épée, Dague, Arc, Hache]
+    capaciter : 
+        vulnerable_concassement : subit plus de dégâts d'armes contondantes.
+    loot :
+        or : 0
+        item : [dague, epee, pierre, Arc, Hache]
+    description : Un tas d'os réanimé brandissant une arme rouillée.
+    xp : 5
+    ia : frappe l'ennemie avec le moins de points de vie
+
+Mort vivant :
+    lvl : 1
+    symbole:'Z'
+    color:'red'
+    bruitage : sfx\NPC\shade\shade12
+    stats : 
+        vie : 15
+        force : 12
+        agiliter : 6
+        constitution : 14
+        intelligence : 2
+        sagesse : 2
+        charisme : 2
+    armes potentiels :
+        main droite : [Mains nues, Baton, Hache]
+    capaciter : 
+        insensible : réduction des degats par deux.
+    loot :
+        or : 0,1
+        item : [bandage, LowHealpotion, Pierre, Hache, Baton, LowManaPotion]
+    description : Un cadavre ambulant en lente décomposition.
+    xp : 5
+    ia : frappe un ennemie au hazard
+
+Fantome :
+    lvl : 2
+    symbole:'F'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\slime_19
+    stats : 
+        vie : 14
+        force : 6
+        agiliter : 16
+        constitution : 8
+        intelligence : 12
+        sagesse : 14
+        charisme : 6
+    armes potentiels :
+        main droite : [Mains nues, Grimoire]
+    capaciter : 
+        incorporel : les attaque physique sans élément ne lui font pas de dégats.
+        Trait de glace: lance un trait de glace (1d8+ sagesse) sur un ennemie au hasard, et le ralentie en divisant par deux son initiative pendant 1d4 tour. (si il n'est pas deja ralentit).
+    loot :
+        or : 0
+        item : [parcheminDeResistanceMagique, parcheminDeResistancePhysique, parcheminDeTraitDeFeu]
+    description : Une apparition spectrale glaciale traversant les murs.
+    xp : 15
+    ia : attaque l'ennemi avec le plus d'initiative
+
+Loup phantomatique:
+    lvl : 2
+    symbole:'W'
+    color:'red'
+    bruitage : sfx\NPC\gutteral beast\mnstr2
+    stats : 
+        vie : 16
+        force : 13
+        agiliter : 15
+        constitution : 12
+        intelligence : 6
+        sagesse : 8
+        charisme : 4
+    armes potentiels :
+        main droite : [crocs : 1d4+agiliter]
+    capaciter : 
+        morsure_spectrale : ignore une partie de l'armure physique.
+    loot :
+        or : 0
+        item : [parcheminDeResistanceMagique, parcheminDeResistancePhysique, parcheminDeTraitDeFeu]
+    description : Un loup brumeux aux yeux étincelants d'énergie éthérée.
+    xp : 16
+    ia : attaque l'ennemi le plus rapide
+
+Loup :
+    lvl : 1
+    symbole:'L'
+    color:'red'
+    bruitage : sfx\NPC\gutteral beast\mnstr5
+    stats : 
+        vie : 14
+        force : 12
+        agiliter : 14
+        constitution : 12
+        intelligence : 4
+        sagesse : 6
+        charisme : 4
+    armes potentiels :
+        main droite : [crocs : 1d4+agiliter]
+    capaciter : 
+        meute : bonus de touche s'il y a d'autres loups en combat.
+    loot :
+        or : 0,0
+        item : [bandage, pierre]
+    description : Un prédateur sauvage agile et féroce.
+    xp : 8
+    ia : frappe l'ennemie avec le moins d'initiative
+
+Serpent Géant:
+    lvl : 3
+    symbole:'V'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\monster_14
+    stats : 
+        vie : 20
+        force : 14
+        agiliter : 13
+        constitution : 14
+        intelligence : 4
+        sagesse : 6
+        charisme : 2
+    armes potentiels :
+        main droite : [crocs : 1d6+agiliter]
+    capaciter : 
+        venin : empoisonne la cible à chaque attaque réussie.
+    loot :
+        or : 0
+        item : [fioledepoison]
+    description : Un serpent reptilien massif au venin mortel.
+    xp : 18
+    ia : attaque la cible avec le plus de HP
+
+Araigner Géante :
+    lvl : 2
+    symbole:'X'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\slime_06
+    stats : 
+        vie : 12
+        force : 11
+        agiliter : 16
+        constitution : 12
+        intelligence : 6
+        sagesse : 8
+        charisme : 2
+    armes potentiels :
+        main droite : [pattes : 1d6+force]
+    capaciter : 
+        toile : ralentit ou immobilise la cible.
+    loot :
+        or : 0
+        item : [fioledepoison, AgilityPotion, bandage]
+    description : Une araignée gigantesque tissant des toiles piégées.
+    xp : 12
+    ia : immobilise puis attaque
+
+Chevalier mort vivant :
+    lvl : 3
+    symbole:'K'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\weird_07
+    stats : 
+        vie : 32
+        force : 16
+        agiliter : 10
+        constitution : 16
+        intelligence : 8
+        sagesse : 8
+        charisme : 10
+    armes potentiels :
+        main droite : [epee2main, hache2main, marteau2main, halebarde]
+    capaciter : 
+        insensible : réduction des degats par deux.
+    loot :
+        or : 10,25
+        item : [plaqueDeFer, epee2main, Healpotion, hache2main, marteau2main, halebarde, anneauDuGuerrier, botteDeFer, cuissardeDeFer, casqueEnFer]
+    description : Un ancien commandant en cuirasse d'acier noir.
+    xp : 35
+    ia : cible le membre avec le plus de charisme de l'équipe
+
+Amas de corps :
+    lvl : 4
+    symbole:'O'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\weird_07
+    stats : 
+        vie : 45
+        force : 18
+        agiliter : 5
+        constitution : 20
+        intelligence : 2
+        sagesse : 4
+        charisme : 1
+    armes potentiels :
+        main droite : [Mains nues, Marteau]
+    capaciter : 
+        insensible : réduction des degats par deux.
+        faiblesse au feux : dégat x2 si attaqué par le feux.
+        séparer du corp principale : quand il est blesser physiquement, 1 chance sur 3 qu'un morte vivant rejoins le combat.
+        Faiblesse au attaque de zone : dégat x2 si attaqué par une attaque de zone.
+    loot :
+        or : 5
+        item : [BigHealpotion, bandage, amuletteDeProtection, shuriken, anneauDeProtection, colierDeRégenération ]
+    description : Une monstruosité grotesque faite de membres cousus ensemble.
+    xp : 40
+    ia : frappe toute l'equipe avec une attaque de zone. 
+
+Ours :
+    lvl : 3
+    symbole:'B'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\roar_06
+    stats : 
+        vie : 35
+        force : 18
+        agiliter : 10
+        constitution : 17
+        intelligence : 4
+        sagesse : 6
+        charisme : 4
+    armes potentiels :
+        main droite : [Mains nues]
+    capaciter : 
+        rage : gagne enragé lorsqu'il passe sous 50% de sa vie.
+    loot :
+        or : 0,0
+        item : [shuriken, cuirasseDeCuir, dagueDeLancer, gantCuir, casqueEnCuir, plaqueDeCuir, bottesCuir]
+    description : Un colosse poilu doté d'une force brutale.
+    xp : 22
+    ia : attaque la cible avec le plus de force.
+
+Gobelin :
+    lvl : 1
+    symbole:'g'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\weird_09
+    stats : 
+        vie : 7
+        force : 6
+        agiliter : 15
+        constitution : 9
+        intelligence : 4
+        sagesse : 6
+        charisme : 3
+    armes potentiels :
+        main droite : [Dague, dagueDeLancer, Sac de sable]
+    capaciter : 
+        fuite_sournoise : bonus d'esquive et attaques fourbes.
+        
+    loot :
+        or : 1,5
+        item : [dague, dagueDeLancer, sacDeSable]
+    description : Une créature hargneuse et rusée aimant les coups bas.
+    xp : 7
+    ia : attaque puis tente de harceler
+
+Seigneur maudit :
+    lvl : 5
+    symbole:'N'
+    color:'red'
+    bruitage : sfx\80-CC0-creature-sfx-2\weird_07
+    stats : 
+        vie : 80
+        force : 20
+        agiliter : 14
+        constitution : 18
+        intelligence : 16
+        sagesse : 14
+        charisme : 16
+    armes potentiels :
+        main droite : [lakua, lacoubee, epee2main]
+    capaciter : 
+        aura_maudite : réduit les résistances de toute l'équipe adverse.
+    loot :
+        or : 50,100
+        item : [ExellentHealpotion, lakua, armureEthere]
+    description : Le maître souverain des ténèbres régnant sur le donjon.
+    xp : 150
+    ia : alterne attaques magiques d'amplitude et coups d'épée mortels
+
+Le Baveur :
+    lvl : 4
+    symbole:'8=@'
+    color:'red'
+    bruitage : sfx\NPC\beetle\bite-small.wav
+    stats : 
+        vie : 8
+        force : 6
+        agiliter : 8
+        constitution : 8
+        intelligence : 1
+        sagesse : 2
+        charisme : 1
+    armes potentiels :
+        main droite : [Mains nues]
+    capaciter : 
+        bave_collante : réduit l'agilité de sa cible.
+    loot :
+        or : 0,0
+        item : [pierre]
+    description : Une vermine visqueuse et rampant dans la fange.
+    xp : 5
+    ia : frappe un ennemie au hazard

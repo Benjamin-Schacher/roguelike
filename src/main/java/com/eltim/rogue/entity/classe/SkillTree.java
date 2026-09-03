@@ -9,10 +9,17 @@ import java.util.List;
 public class SkillTree {
 
     public final String name;
+    public String description = "";
     public final List<Skill> skills; // Toujours 5 skills, un par tier
 
     public SkillTree(String name, List<Skill> skills) {
         this.name = name;
+        this.skills = skills;
+    }
+
+    public SkillTree(String name, String description, List<Skill> skills) {
+        this.name = name;
+        this.description = description;
         this.skills = skills;
     }
 

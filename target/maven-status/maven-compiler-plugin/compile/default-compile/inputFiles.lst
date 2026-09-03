@@ -7,9 +7,15 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\entity.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\Gender.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\base\Race.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\archerClasse.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\classe.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\mageClasse.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\priestClasse.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\rogueClasse.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\Skill.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\SkillTree.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\Subclass.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\SubclassCatalog.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\classe\warriorClasse.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\compagnon\Valentin.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\entity\enemie\wolf.java
@@ -64,6 +70,7 @@ C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\system\InventorySystem.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\system\mouvementSysteme.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\system\SkillMenuSystem.java
+C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\system\SubclassSelectionSystem.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\world\map.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\world\room.java
 C:\Users\eltim\OneDrive\Desktop\jeu dev\roguelike\src\main\java\com\eltim\rogue\world\tile.java

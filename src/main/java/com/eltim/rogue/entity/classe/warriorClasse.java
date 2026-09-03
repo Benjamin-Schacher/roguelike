@@ -56,19 +56,19 @@ public class warriorClasse extends classe {
         SkillTree technique = new SkillTree("Technique Combat", Arrays.asList(
             new Skill("jet_sable", "Jet de Sable", 
                 "L'adversaire touché subit -2 pour toucher pendant 1d4 + points investis dans cet arbre tours.", 
-                1, "Technique Combat"),
+                1, "Technique Combat").withSound("rpg-battle-system/2"),
             new Skill("posture_defensive", "Posture Défensive", 
                 "Gagnez un bonus à la Défense égal à votre Sagesse (si positive) pendant autant de tours que de points dans cet arbre.", 
-                2, "Technique Combat"),
+                2, "Technique Combat").withSound("rpg-battle-system/9"),
             new Skill("attaque_ampleur", "Attaque d'Ampleur", 
                 "Balayez la première ligne ennemie accessible et frappez tous les adversaires présents. Ils font un jet de Dextérité (DC12) pour diviser les dégâts par 2.", 
-                3, "Technique Combat"),
+                3, "Technique Combat").withSound("medieval-fantasy/woosh-2"),
             new Skill("riposte", "Riposte", 
                 "Quand un ennemi vous attaque, vous le frappez immédiatement avec l'arme en main droite.", 
                 4, "Technique Combat"),
             new Skill("etourdissement", "Étourdissement", 
                 "L'adversaire ciblé passe son prochain tour.", 
-                5, "Technique Combat")
+                5, "Technique Combat").withSound("prehistoric-platformer/wood-4")
         ));
 
         // ==========================================
@@ -80,21 +80,21 @@ public class warriorClasse extends classe {
                 1, "Berzerker"),
             new Skill("hurlement_guerrier", "Hurlement de Guerrier", 
                 "Vous et vos équipiers gagnez un bonus d'attaque égal à votre modificateur de Force pendant un nombre de tours égal aux points dans cet arbre.", 
-                2, "Berzerker"),
+                2, "Berzerker").withSound("vrac/hurlemenent-de-rage"),
             new Skill("frenesie_meurtriere", "Frénésie Meurtrière", 
                 "Quand vous tuez un adversaire, vous gagnez +1 au toucher et aux dégâts par ennemi abattu (marche aussi sur les invocations).", 
                 3, "Berzerker"),
             new Skill("hurlement_provocation", "Hurlement de Provocation", 
                 "Pendant 1d4 tours, les adversaires vous attaquent en priorité.", 
-                4, "Berzerker"),
+                4, "Berzerker").withSound("vrac/hurlemenent-de-rage"),
             new Skill("double_attaque", "Double Attaque", 
                 "Vous obtenez une action supplémentaire par tour pour attaquer.", 
                 5, "Berzerker")
         ));
 
-        this.trees.add(maitreArme);
-        this.trees.add(beteGuerre);
-        this.trees.add(technique);
-        this.trees.add(berzerker);
+        this.availableTrees.add(maitreArme);
+        this.availableTrees.add(beteGuerre);
+        this.availableTrees.add(technique);
+        this.availableTrees.add(berzerker);
     }
 }

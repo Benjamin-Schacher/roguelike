@@ -314,6 +314,9 @@ public class LevelLoader {
                 if (lootInfo.length >= 2) {
                     m1.addLoot(new key(lootInfo[0].trim(), Integer.parseInt(lootInfo[1].trim())));
                 }
+            } else if (p.startsWith("SON:") || p.startsWith("SOUND:") || p.startsWith("BRUITAGE:")) {
+                int idx = p.indexOf(":");
+                m1.setSoundName(p.substring(idx + 1).trim());
             }
         }
         return m1;
@@ -342,6 +345,9 @@ public class LevelLoader {
                 companion.setCharisme(Integer.parseInt(p.substring(4).trim()));
             } else if (p.startsWith("CON:")) {
                 companion.setConstitution(Integer.parseInt(p.substring(4).trim()));
+            } else if (p.startsWith("SON:") || p.startsWith("SOUND:") || p.startsWith("BRUITAGE:")) {
+                int idx = p.indexOf(":");
+                companion.setSoundName(p.substring(idx + 1).trim());
             }
         }
         return companion;

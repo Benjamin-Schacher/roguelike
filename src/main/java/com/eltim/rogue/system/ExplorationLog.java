@@ -23,6 +23,10 @@ public class ExplorationLog {
         }
     }
 
+    public static void addLog(String message) {
+        add(message);
+    }
+
     /**
      * Ajoute un jet de dé formaté automatiquement.
      * @param action   nom de l'action (ex: "Crochetage", "Perception")

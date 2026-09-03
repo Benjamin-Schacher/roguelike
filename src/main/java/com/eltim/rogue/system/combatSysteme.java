@@ -43,20 +43,28 @@ public class combatSysteme {
     private static boolean itemUsedThisTurn = false;
     private static boolean inItemSubMenu = false;
     private static List<com.eltim.rogue.item.base.item> usableItemsSubMenu = new ArrayList<>();
+    private static boolean inSkillSubMenu = false;
+    private static List<com.eltim.rogue.entity.classe.Skill> usableSkillsSubMenu = new ArrayList<>();
 
     private static void resetMainMenuOptions() {
         inItemSubMenu = false;
+        inSkillSubMenu = false;
         usableItemsSubMenu.clear();
+        usableSkillsSubMenu.clear();
         options.clear();
         options.add("Attaquer");
         options.add("Attaquer avec l'arme secondaire"); 
-        options.add("Lancer un sort");
+        options.add("Utiliser une compétence");
         options.add("Utiliser objet");
         options.add("Fuir");
         selection = 0;
     }
 
     public static void startCombat(entity player, List<entity> enemies, map gameMap) {
+        startCombat(player, enemies, gameMap, false);
+    }
+
+    public static void startCombat(entity player, List<entity> enemies, map gameMap, boolean skipFirstPlayerTurn) {
         com.eltim.rogue.engine.inputHandler.clearInput();
         com.eltim.rogue.engine.sound.SoundManager.getInstance().startCombatMusic();
         combatOpen = true;
@@ -101,6 +109,13 @@ public class combatSysteme {
         combatLog.clear();
         combatLog.add("Le combat commence !");
         combatLog.add("Ennemis - Ligne avant: " + enemyFrontLine.size() + " | Ligne arrière: " + enemyBackLine.size());
+
+        if (skipFirstPlayerTurn) {
+            combatLog.add("> Fuite pré-combat échouée : Vous perdez votre premier tour !");
+            if (!turnQueue.isEmpty() && allyGroup.contains(turnQueue.get(0))) {
+                currentTurnIndex++;
+            }
+        }
         
         playCurrentTurn();
     }
@@ -182,10 +197,11 @@ public class combatSysteme {
             }
             executeAction();
         } else if (key.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            if (inItemSubMenu) {
+            if (inItemSubMenu || inSkillSubMenu) {
+                boolean wasSkill = inSkillSubMenu;
                 resetMainMenuOptions();
-                selection = 3; // Replacer le curseur sur "Utiliser objet"
-                combatLog.add("> Utilisation d'objet annulée.");
+                selection = wasSkill ? 2 : 3;
+                combatLog.add("> Action annulée.");
                 return;
             }
             combatOpen = false; 
@@ -208,6 +224,43 @@ public class combatSysteme {
         }
         
         combatLog.add("--- Tour de " + currentActor.getName() + " ---");
+
+        // Traitement des altérations (Bonus / Malus) actives au début du tour
+        if (currentActor.getAlterationList() != null && !currentActor.getAlterationList().isEmpty()) {
+            List<com.eltim.rogue.alteration.alteration> toRemove = new ArrayList<>();
+            for (com.eltim.rogue.alteration.alteration alt : currentActor.getAlterationList()) {
+                if (alt.getType() == com.eltim.rogue.alteration.alteration.Type.MALUS && alt.getValue() > 0) {
+                    currentActor.setLifePoint(Math.max(0, currentActor.getLifePoint() - alt.getValue()));
+                    combatLog.add("  -> " + currentActor.getName() + " subit " + alt.getValue() + " dégâts de [" + alt.getName() + "] !");
+                } else if (alt.getType() == com.eltim.rogue.alteration.alteration.Type.BUFF && alt.getValue() > 0 && alt.getName().toLowerCase().contains("régén")) {
+                    int heal = alt.getValue();
+                    currentActor.setLifePoint(Math.min(currentActor.getMaxLifePoint(), currentActor.getLifePoint() + heal));
+                    combatLog.add("  -> " + currentActor.getName() + " régénère " + heal + " PV grâce à [" + alt.getName() + "] !");
+                }
+                alt.tickTurn();
+                if (alt.isExpired()) {
+                    toRemove.add(alt);
+                }
+            }
+            for (com.eltim.rogue.alteration.alteration exp : toRemove) {
+                currentActor.removeAlteration(exp);
+                combatLog.add("  -> L'effet [" + exp.getName() + "] sur " + currentActor.getName() + " a pris fin.");
+            }
+        }
+
+        if (currentActor.isDead()) {
+            combatLog.add("> " + currentActor.getName() + " s'effondre sous les effets subis !");
+            cleanCombatLog();
+            nextTurn();
+            return;
+        }
+
+        if (currentActor.isStunned()) {
+            combatLog.add("> " + currentActor.getName() + " est étourdi et passe son tour !");
+            cleanCombatLog();
+            nextTurn();
+            return;
+        }
         
         boolean isPlayerControlled = allyGroup.contains(currentActor);
         if (isPlayerControlled) {
@@ -257,6 +310,25 @@ public class combatSysteme {
     private static void executeAction() {
         if (isCombatEnding) return;
 
+        if (inSkillSubMenu) {
+            if (selection >= usableSkillsSubMenu.size() || options.get(selection).equals("[ Annuler ]")) {
+                resetMainMenuOptions();
+                selection = 2; // Replacer le curseur sur "Utiliser une compétence"
+                combatLog.add("> Utilisation de compétence annulée.");
+                return;
+            }
+
+            com.eltim.rogue.entity.classe.Skill chosenSkill = usableSkillsSubMenu.get(selection);
+            entity targetEntity = enemyGroup.get(targetEnemyIndex);
+
+            executeSkillEffect(currentActor, targetEntity, chosenSkill);
+
+            cleanCombatLog();
+            resetMainMenuOptions();
+            nextTurn();
+            return;
+        }
+
         if (inItemSubMenu) {
             if (selection >= usableItemsSubMenu.size() || options.get(selection).equals("[ Annuler ]")) {
                 resetMainMenuOptions();
@@ -267,6 +339,10 @@ public class combatSysteme {
 
             com.eltim.rogue.item.base.item chosenItem = usableItemsSubMenu.get(selection);
             entity targetEntity = enemyGroup.get(targetEnemyIndex);
+
+            if (chosenItem != null && chosenItem.getSoundName() != null && !chosenItem.getSoundName().isEmpty()) {
+                com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX(chosenItem.getSoundName());
+            }
 
             if (chosenItem instanceof com.eltim.rogue.item.potion) {
                 ((com.eltim.rogue.item.potion) chosenItem).applyEffect(currentActor);
@@ -387,21 +463,35 @@ public class combatSysteme {
                 currentTurnUsed = false;
             }
         }
-        else if (action.equals("Lancer un sort")) {
-            if (currentActor.getMana() < 2) {
-                combatLog.add("> Action impossible : Pas assez de Mana ! (Requis: 2)");
-                currentTurnUsed = false;
-            } else {
-                if (trySpell(currentActor, targetEntity)) {
-                    currentActor.setMana(currentActor.getMana() - 2);
-                    int degatSort = 4 + diceRollSysteme.getModifier(getMagicStatValue(currentActor));
-                    if (degatSort < 1) degatSort = 1;
-                    targetEntity.setLifePoint(targetEntity.getLifePoint() - degatSort);
-                    combatLog.add("  -> " + currentActor.getName() + " inflige " + degatSort + " dégâts magiques !");
-                } else {
-                    currentActor.setMana(currentActor.getMana() - 2);
+        else if (action.equals("Utiliser une compétence")) {
+            usableSkillsSubMenu.clear();
+            if (currentActor instanceof player) {
+                player p = (player) currentActor;
+                if (p.classe != null && p.classe.trees != null) {
+                    for (com.eltim.rogue.entity.classe.SkillTree tree : p.classe.trees) {
+                        for (com.eltim.rogue.entity.classe.Skill sk : tree.skills) {
+                            if (sk.unlocked) {
+                                usableSkillsSubMenu.add(sk);
+                            }
+                        }
+                    }
                 }
             }
+
+            if (usableSkillsSubMenu.isEmpty()) {
+                combatLog.add("> Aucune compétence débloquée ! (Appuyez sur [K] hors-combat)");
+                return;
+            }
+
+            inSkillSubMenu = true;
+            options.clear();
+            for (com.eltim.rogue.entity.classe.Skill sk : usableSkillsSubMenu) {
+                options.add("★ " + sk.name);
+            }
+            options.add("[ Annuler ]");
+            selection = 0;
+            combatLog.add("--- Choisissez une compétence à utiliser ---");
+            return;
         } 
         else if (action.equals("Utiliser objet")) {
             if (itemUsedThisTurn) {
@@ -444,6 +534,10 @@ public class combatSysteme {
     }
 
     private static void enemyAiTurn(entity enemy) {
+        if (enemy != null && enemy.getSoundName() != null && !enemy.getSoundName().isEmpty()) {
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX(enemy.getSoundName());
+        }
+
         List<entity> potentialTargets = new ArrayList<>();
         for (entity ally : allyGroup) {
             if (!ally.isDead()) potentialTargets.add(ally);
@@ -494,12 +588,18 @@ public class combatSysteme {
         for (entity e : enemyGroup) {
             if (e instanceof monster) {
                 monster m = (monster) e;
-                com.eltim.rogue.item.base.item loot = m.rollLoot();
-                if (loot != null) {
+                List<com.eltim.rogue.item.base.item> loots = m.rollLoots();
+                for (com.eltim.rogue.item.base.item loot : loots) {
                     if (playerEntity instanceof player) {
                         ((player) playerEntity).addLoot(loot);
                     }
                     combatLog.add("> Loot : " + loot.getName() + ".");
+                }
+
+                int goldGained = m.rollGold();
+                if (goldGained > 0) {
+                    playerEntity.addGold(goldGained);
+                    combatLog.add("> Or gagné : " + goldGained + " pièces d'or.");
                 }
             }
         }
@@ -533,18 +633,48 @@ public class combatSysteme {
     }
 
     public static boolean tryEscape(entity target) {
-        int agiMod = diceRollSysteme.getModifier(playerEntity.getAgilite());
-        int defenseFuite = 10 + diceRollSysteme.getModifier(target.getAgilite());
-        int roll = (int)(Math.random() * 20) + 1;
-        int total = roll + agiMod;
-        String modSign = (agiMod >= 0) ? ("+" + agiMod) : String.valueOf(agiMod);
+        int playerDexMod = diceRollSysteme.getModifier(playerEntity.getAgilite());
+        int playerRoll = (int)(Math.random() * 20) + 1;
+        int playerTotal = playerRoll + playerDexMod;
+        String playerModSign = (playerDexMod >= 0) ? ("+" + playerDexMod) : String.valueOf(playerDexMod);
 
-        if (total >= defenseFuite) {
-            combatLog.add("> " + playerEntity.getName() + " tente de Fuir (Jet d20: " + roll + " " + modSign + " = " + total + " vs SEUIL " + defenseFuite + ") -> FUITE RÉUSSIE !");
+        int maxEnemyDex = 10;
+        entity fastestEnemy = null;
+        for (entity e : enemyGroup) {
+            if (!e.isDead() && e.getAgilite() >= maxEnemyDex) {
+                maxEnemyDex = e.getAgilite();
+                fastestEnemy = e;
+            }
+        }
+        if (fastestEnemy == null && target != null) {
+            fastestEnemy = target;
+            maxEnemyDex = target.getAgilite();
+        }
+
+        int enemyDexMod = diceRollSysteme.getModifier(maxEnemyDex);
+        int enemyRoll = (int)(Math.random() * 20) + 1;
+        int enemyTotal = enemyRoll + enemyDexMod;
+        String enemyModSign = (enemyDexMod >= 0) ? ("+" + enemyDexMod) : String.valueOf(enemyDexMod);
+        String enemyName = (fastestEnemy != null && fastestEnemy.getName() != null) ? fastestEnemy.getName() : "Ennemi";
+
+        boolean success = (playerTotal >= enemyTotal);
+
+        ExplorationLog.add("« Fuite : Joueur " + playerTotal + " vs " + enemyName + " " + enemyTotal + " — " + (success ? "Succès" : "Échec") + " »");
+
+        if (success) {
+            combatLog.add("> Jet Opposé de Fuite (DEX) : Joueur (" + playerRoll + playerModSign + "=" + playerTotal + ") vs " + enemyName + " (" + enemyRoll + enemyModSign + "=" + enemyTotal + ") — SUCCÈS !");
+            combatLog.add("  ↳ Ennemis étourdis pendant 5 secondes !");
+
+            for (entity e : enemyGroup) {
+                e.stunForMillis(5000);
+            }
+
             combatOpen = false;
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().restorePreviousMusic();
             return true;
         } else {
-            combatLog.add("> " + playerEntity.getName() + " tente de Fuir (Jet d20: " + roll + " " + modSign + " = " + total + " vs SEUIL " + defenseFuite + ") -> FUITE ÉCHOUÉE !");
+            combatLog.add("> Jet Opposé de Fuite (DEX) : Joueur (" + playerRoll + playerModSign + "=" + playerTotal + ") vs " + enemyName + " (" + enemyRoll + enemyModSign + "=" + enemyTotal + ") — ÉCHEC !");
+            combatLog.add("  ↳ Vous perdez votre tour !");
             return false;
         }
     }
@@ -563,6 +693,150 @@ public class combatSysteme {
         } else {
             combatLog.add("> " + attacker.getName() + " lance un [Sort Magique] (Jet d20: " + roll + " " + modSign + " = " + total + " vs DEF " + targetDefense + ") -> INCANTATION RATÉE !");
             return false;
+        }
+    }
+
+    private static void executeSkillEffect(entity actor, entity target, com.eltim.rogue.entity.classe.Skill skill) {
+        if (skill == null) return;
+
+        if (skill.soundName != null && !skill.soundName.isEmpty()) {
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX(skill.soundName);
+        }
+
+        combatLog.add("> [Compétence] " + actor.getName() + " déclenche " + skill.name + " !");
+
+        String id = skill.id != null ? skill.id : "";
+        int strMod = diceRollSysteme.getModifier(actor.getForce());
+        int dexMod = diceRollSysteme.getModifier(actor.getAgilite());
+        int intMod = diceRollSysteme.getModifier(actor.getIntelligence());
+        int sagMod = diceRollSysteme.getModifier(actor.getSagesse());
+
+        switch (id) {
+            case "jet_sable":
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Aveuglé", com.eltim.rogue.alteration.alteration.Type.MALUS, 3, -2));
+                combatLog.add("  -> " + target.getName() + " est aveuglé par le sable (-2 aux jets de toucher) !");
+                break;
+            case "posture_defensive":
+            case "bouclier_foi":
+                String buffDefName = id.equals("bouclier_foi") ? "Bouclier de Foi" : "Posture Défensive";
+                actor.addAlteration(new com.eltim.rogue.alteration.alteration(buffDefName, com.eltim.rogue.alteration.alteration.Type.BUFF, 3, 3));
+                combatLog.add("  -> " + actor.getName() + " adopte une posture défensive (Défense augmentée) !");
+                break;
+            case "attaque_ampleur":
+            case "boule_de_feu":
+            case "tempete_acier_magique":
+                int cleaveCount = 0;
+                int baseCleaveDmg = id.equals("boule_de_feu") ? (10 + intMod) : (6 + strMod);
+                for (entity e : enemyFrontLine) {
+                    if (!e.isDead()) {
+                        int dmg = Math.max(1, baseCleaveDmg);
+                        e.setLifePoint(e.getLifePoint() - dmg);
+                        cleaveCount++;
+                    }
+                }
+                if (cleaveCount == 0 && !target.isDead()) {
+                    int dmg = Math.max(1, baseCleaveDmg);
+                    target.setLifePoint(target.getLifePoint() - dmg);
+                    cleaveCount = 1;
+                }
+                combatLog.add("  -> Frappe de zone touchant " + cleaveCount + " cible(s) adverse(s) !");
+                break;
+            case "etourdissement":
+            case "grenade_flash":
+            case "nova_glace":
+                target.stunForMillis(2000);
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Étourdi", com.eltim.rogue.alteration.alteration.Type.MALUS, 1));
+                combatLog.add("  -> " + target.getName() + " est sous le choc et étourdi !");
+                break;
+            case "hurlement_guerrier":
+            case "chant_courage":
+                String warCryName = id.equals("chant_courage") ? "Chant de Courage" : "Cri de Guerre";
+                for (entity a : allyGroup) {
+                    a.addAlteration(new com.eltim.rogue.alteration.alteration(warCryName, com.eltim.rogue.alteration.alteration.Type.BUFF, 3, 2));
+                }
+                combatLog.add("  -> Cri de guerre et ferveur ! L'équipe gagne un bonus aux dégâts !");
+                break;
+            case "hurlement_provocation":
+            case "totem_provoc":
+                actor.addAlteration(new com.eltim.rogue.alteration.alteration("Provocation", com.eltim.rogue.alteration.alteration.Type.BUFF, 2));
+                combatLog.add("  -> " + actor.getName() + " attire la haine des ennemis !");
+                break;
+            case "second_souffle":
+            case "priere_soin":
+            case "toucher_guerisseur":
+            case "imposition_mains":
+                int heal = 12 + Math.max(diceRollSysteme.getModifier(actor.getConstitution()), sagMod) * 2;
+                if (id.equals("imposition_mains")) heal += 10;
+                if (heal < 5) heal = 5;
+                actor.setLifePoint(Math.min(actor.getMaxLifePoint(), actor.getLifePoint() + heal));
+                actor.addAlteration(new com.eltim.rogue.alteration.alteration("Bénédiction de Vie", com.eltim.rogue.alteration.alteration.Type.BUFF, 2, 2));
+                combatLog.add("  -> " + actor.getName() + " récupère " + heal + " PV !");
+                break;
+            case "lame_empoisonnee":
+            case "poison_neuro":
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Poison", com.eltim.rogue.alteration.alteration.Type.MALUS, 3, 3));
+                int pDmg = 8 + dexMod;
+                target.setLifePoint(target.getLifePoint() - pDmg);
+                combatLog.add("  -> Lame empoisonnée infligeant " + pDmg + " dégâts et empoisonnant " + target.getName() + " !");
+                break;
+            case "brulure_persistante":
+            case "fleche_enflammee":
+                target.addAlteration(new com.eltim.rogue.alteration.alteration("Brûlure", com.eltim.rogue.alteration.alteration.Type.MALUS, 3, 4));
+                int bDmg = 8 + intMod;
+                target.setLifePoint(target.getLifePoint() - bDmg);
+                combatLog.add("  -> Enflamme la cible infligeant " + bDmg + " dégâts et brûlure persistante !");
+                break;
+            case "regeneration_sacree":
+            case "rosee_restauratrice":
+                for (entity a : allyGroup) {
+                    a.addAlteration(new com.eltim.rogue.alteration.alteration("Régénération", com.eltim.rogue.alteration.alteration.Type.BUFF, 3, 4));
+                }
+                combatLog.add("  -> Une aura de régénération sacrée enveloppe tous les alliés (+4 PV/tour) !");
+                break;
+            case "attaque_sournoise":
+            case "execution":
+            case "frappe_sournoise_g":
+                int sneakDmg = 10 + dexMod * 2;
+                if (id.equals("execution") && target.getLifePoint() < target.getMaxLifePoint() * 0.4) sneakDmg *= 2;
+                target.setLifePoint(target.getLifePoint() - sneakDmg);
+                combatLog.add("  -> Coup critique sournois infligeant " + sneakDmg + " dégâts à " + target.getName() + " !");
+                break;
+            case "double_fleche":
+            case "cent_coups":
+            case "danse_lames":
+                int strikes = id.equals("cent_coups") ? 3 : (id.equals("danse_lames") ? 4 : 2);
+                int strikeDmg = Math.max(2, 5 + Math.max(dexMod, strMod));
+                for (int s = 0; s < strikes; s++) {
+                    target.setLifePoint(target.getLifePoint() - strikeDmg);
+                }
+                combatLog.add("  -> Enchaîne " + strikes + " coups fulgurants infligeant " + (strikeDmg * strikes) + " dégâts au total !");
+                break;
+            case "toucher_vampirique":
+                int vampDmg = 8 + intMod;
+                target.setLifePoint(target.getLifePoint() - vampDmg);
+                actor.setLifePoint(Math.min(actor.getMaxLifePoint(), actor.getLifePoint() + vampDmg));
+                actor.addAlteration(new com.eltim.rogue.alteration.alteration("Siphon Vital", com.eltim.rogue.alteration.alteration.Type.BUFF, 2));
+                combatLog.add("  -> Draine " + vampDmg + " PV à " + target.getName() + " pour régénérer le lanceur !");
+                break;
+            case "meteore":
+            case "colere_dieux":
+            case "fureur_elements":
+            case "pluie_fleches":
+                int cataclysmDmg = 14 + Math.max(intMod, sagMod) * 2;
+                for (entity e : enemyGroup) {
+                    if (!e.isDead()) {
+                        e.setLifePoint(e.getLifePoint() - cataclysmDmg);
+                    }
+                }
+                combatLog.add("  -> CATACLYSME DIVIN/MAGIQUE ! Inflige " + cataclysmDmg + " dégâts à TOUS les ennemis !");
+                break;
+            default:
+                // Attaque / Sort magique générique de classe
+                int dmg = 8 + Math.max(Math.max(strMod, dexMod), Math.max(intMod, sagMod));
+                if (dmg < 2) dmg = 2;
+                target.setLifePoint(target.getLifePoint() - dmg);
+                combatLog.add("  -> Inflige " + dmg + " dégâts à " + target.getName() + " !");
+                break;
         }
     }
 

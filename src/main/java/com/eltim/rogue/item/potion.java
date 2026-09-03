@@ -82,6 +82,8 @@ public class potion extends item {
                 target.setMana(Math.min(target.getMaxMana(), target.getMana() + manaGain));
             }
         } else if (potionType == potionTypeEnum.BUFF) {
+            String bName = "Potion " + (statBuffName != null ? statBuffName : "Force");
+            target.addAlteration(new com.eltim.rogue.alteration.alteration(bName, com.eltim.rogue.alteration.alteration.Type.BUFF, 4, statBuffValue));
             if ("force".equalsIgnoreCase(statBuffName)) {
                 target.setForce(target.getForce() + statBuffValue);
             } else if ("agilite".equalsIgnoreCase(statBuffName) || "agiliter".equalsIgnoreCase(statBuffName)) {

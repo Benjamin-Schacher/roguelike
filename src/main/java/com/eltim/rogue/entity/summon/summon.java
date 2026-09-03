@@ -17,6 +17,7 @@ public class summon extends entity {
         this.action = action;
         this.summoner = summoner;
         this.turnsRemaining = turnsRemaining;
+        this.soundName = "rpg-battle-system/4";
     }
 
     public void performAction(List<entity> enemies) {

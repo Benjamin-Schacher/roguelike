@@ -199,13 +199,19 @@ public class SoundManager {
     private AudioInputStream findAudioStream(String name) {
         if (name == null || name.isEmpty()) return null;
 
-        String cleanName = (name.endsWith(".wav") || name.endsWith(".mp3")) ? name : name + ".wav";
+        String cleanName = name;
+        if (!name.endsWith(".wav") && !name.endsWith(".mp3") && !name.endsWith(".ogg")) {
+            cleanName = name + ".wav";
+        }
 
         // 1. Recherche par Classpath Resource
         String[] relPaths = {
             "/audio/ambiance/" + cleanName,
             "/audio/music/" + cleanName,
             "/audio/sfx/" + cleanName,
+            "/audio/sfx/" + name + ".ogg",
+            "/audio/sfx/" + name + ".wav",
+            "/audio/sfx/" + name,
             "/audio/" + cleanName,
             "/audio/ambiance/" + name,
             "/audio/music/" + name
@@ -220,29 +226,51 @@ public class SoundManager {
             } catch (Exception ignored) {}
         }
 
-        // 2. Recherche par Système de Fichiers (avec correspondance partielle / insensible à la casse)
+        // 2. Recherche par Système de Fichiers (avec recherche récursive dans sfx/music/ambiance)
         File[] searchDirs = {
-            new File("src/main/resources/audio/ambiance"),
-            new File("src/main/resources/audio/music"),
-            new File("src/main/resources/audio/sfx"),
-            new File("target/classes/audio/ambiance"),
-            new File("target/classes/audio/music")
+            new File("src/main/resources/audio"),
+            new File("target/classes/audio")
         };
 
-        String query = name.toLowerCase();
+        File found = searchAudioFileRecursive(searchDirs, name);
+        if (found != null) {
+            try {
+                return AudioSystem.getAudioInputStream(found);
+            } catch (Exception ignored) {}
+        }
 
-        for (File dir : searchDirs) {
+        return null;
+    }
+
+    private File searchAudioFileRecursive(File[] dirs, String queryName) {
+        String target = queryName.toLowerCase().trim();
+        for (File dir : dirs) {
             if (dir.exists() && dir.isDirectory()) {
-                File[] files = dir.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        String fn = f.getName().toLowerCase();
-                        if (fn.equals(query) || fn.equals(cleanName.toLowerCase()) || fn.contains(query)) {
-                            try {
-                                return AudioSystem.getAudioInputStream(f);
-                            } catch (Exception ignored) {}
-                        }
-                    }
+                File res = findInDir(dir, target);
+                if (res != null) return res;
+            }
+        }
+        return null;
+    }
+
+    private File findInDir(File dir, String query) {
+        File[] files = dir.listFiles();
+        if (files == null) return null;
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                File sub = findInDir(f, query);
+                if (sub != null) return sub;
+            } else {
+                String fullName = f.getName().toLowerCase();
+                String nameNoExt = fullName;
+                int dotIdx = fullName.lastIndexOf('.');
+                if (dotIdx > 0) nameNoExt = fullName.substring(0, dotIdx);
+
+                String relPath = f.getPath().replace('\\', '/').toLowerCase();
+
+                if (fullName.equals(query) || nameNoExt.equals(query) || relPath.endsWith("/" + query + ".ogg") || relPath.endsWith("/" + query + ".wav") || relPath.endsWith("/" + query)) {
+                    return f;
                 }
             }
         }
