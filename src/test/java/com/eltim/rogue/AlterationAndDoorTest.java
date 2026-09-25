@@ -144,5 +144,66 @@ public class AlterationAndDoorTest extends TestCase {
         assertTrue(c.isOpen());
         assertEquals("Le joueur doit avoir reçu l'objet", initialInvSize + 1, p.getInventory().size());
         assertTrue(p.getInventory().contains(testLoot));
+
+        // Une fois pillé, le coffre ne propose plus d'options d'interaction
+        assertTrue("Les coffres pillés ne doivent plus être ré-interagibles", c.getInteractionOptions(p).isEmpty());
+    }
+
+    public void testInteractionTileTagAndDescription() {
+        InteractionTile it = new InteractionTile(5, 5, '£', "Prier le dieu Karin | TAG: tutoLevel | DESC: Un ancien autel à la gloire de Karin, dieu des voleurs.");
+        assertEquals("Prier le dieu Karin", it.getActionName());
+        assertEquals("tutoLevel", it.getTag());
+        assertEquals("Un ancien autel à la gloire de Karin, dieu des voleurs.", it.getDescription());
+        assertEquals("Autel de Karin", it.getName());
+    }
+
+    public void testTutoOnlyCorridorMonsterHasKey() {
+        com.eltim.rogue.level.LevelLoader.LevelData data = com.eltim.rogue.level.LevelLoader.parseFile("levels/tuto.txt");
+        player p = new player(15, 13);
+        map m = com.eltim.rogue.level.LevelLoader.generateMap(data, p);
+
+        int monstersWithKey = 0;
+        int totalMonsters = 0;
+        com.eltim.rogue.entity.monster corridorMonster = null;
+
+        for (com.eltim.rogue.entity.base.entity e : m.getEntities()) {
+            if (e instanceof com.eltim.rogue.entity.monster) {
+                com.eltim.rogue.entity.monster mon = (com.eltim.rogue.entity.monster) e;
+                totalMonsters++;
+                if (mon.getY() == 10 && mon.getX() == 19) {
+                    corridorMonster = mon;
+                }
+                boolean hasKey = mon.getGuaranteedLoots().stream().anyMatch(l -> l.getName().contains("Clé"));
+                if (hasKey) {
+                    monstersWithKey++;
+                }
+            }
+        }
+
+        assertNotNull("Le monstre du couloir doit exister en (19, 10)", corridorMonster);
+        assertEquals("Seul le monstre du couloir doit posséder la clé", 1, monstersWithKey);
+        assertTrue("Le monstre du couloir doit avoir la clé", corridorMonster.getGuaranteedLoots().stream().anyMatch(l -> l.getName().contains("Clé")));
+        assertTrue("Il doit y avoir d'autres monstres sans clé dans le niveau", totalMonsters > 1);
+    }
+
+    public void testCoordinateBasedMonsterConfig() {
+        com.eltim.rogue.level.LevelLoader.LevelData data = new com.eltim.rogue.level.LevelLoader.LevelData();
+        data.layout.add(".....");
+        data.layout.add(".M.M.");
+        data.layout.add(".....");
+        data.monstersConfig.put('M', "Mort vivant");
+        data.specificMonstersConfig.put("3,1", "Garde d'élite | HP:50 | LOOT: Clé secrète : 42");
+
+        map m = com.eltim.rogue.level.LevelLoader.generateMap(data, null);
+        com.eltim.rogue.entity.monster m1 = (com.eltim.rogue.entity.monster) m.getEntityAt(1, 1);
+        com.eltim.rogue.entity.monster m2 = (com.eltim.rogue.entity.monster) m.getEntityAt(3, 1);
+
+        assertNotNull(m1);
+        assertNotNull(m2);
+        assertEquals("Mort vivant", m1.getName());
+        assertEquals("Garde d'élite", m2.getName());
+        assertEquals(50, m2.getMaxLifePoint());
+        assertTrue(m2.getGuaranteedLoots().stream().anyMatch(l -> l.getName().contains("Clé secrète")));
+        assertTrue(m1.getGuaranteedLoots().isEmpty());
     }
 }

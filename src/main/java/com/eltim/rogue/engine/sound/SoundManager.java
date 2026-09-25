@@ -14,10 +14,25 @@ public class SoundManager {
 
     private static SoundManager instance;
 
-    private Thread musicThread;
-    private SourceDataLine musicLine;
-    private volatile boolean musicRunning = false;
+    private static class MusicSession {
+        final int id;
+        final String trackName;
+        volatile boolean running = true;
+        volatile boolean fading = false;
+        volatile SourceDataLine line;
+        Thread thread;
+        volatile Thread fadeThread;
+        volatile float fadeMultiplier = 1.0f;
 
+        MusicSession(int id, String trackName) {
+            this.id = id;
+            this.trackName = trackName;
+        }
+    }
+
+    private final Object musicLock = new Object();
+    private int sessionCounter = 0;
+    private MusicSession currentSession = null;
     private String currentMusicTrack;
     private String savedPreviousTrack;
 
@@ -57,109 +72,226 @@ public class SoundManager {
         return instance;
     }
 
+    public String getCurrentMusicTrack() {
+        synchronized (musicLock) {
+            return currentMusicTrack;
+        }
+    }
+
+    public boolean isMusicRunning() {
+        synchronized (musicLock) {
+            return currentSession != null && currentSession.running;
+        }
+    }
+
     /**
-     * Joue une musique d'ambiance en boucle continue via streaming audio (SourceDataLine).
+     * Joue une musique d'ambiance en boucle continue avec fondu (fade-out de l'ancienne, puis fade-in de la nouvelle).
      * @param trackName Nom ou partie du nom du fichier audio
      */
-    public synchronized void playMusic(String trackName) {
+    public void playMusic(String trackName) {
+        playMusic(trackName, 800);
+    }
+
+    public void playMusic(String trackName, long fadeDurationMs) {
         if (trackName == null || trackName.trim().isEmpty()) {
             return;
         }
 
-        // Déjà en cours de lecture
-        if (trackName.equalsIgnoreCase(currentMusicTrack) && musicRunning) {
+        synchronized (musicLock) {
+            if (!trackName.equalsIgnoreCase("combat") && !trackName.equalsIgnoreCase("hurryup")) {
+                savedPreviousTrack = trackName;
+            }
+
+            // Déjà en cours de lecture et pas en train de disparaître (fade out)
+            if (currentSession != null && currentSession.running && !currentSession.fading
+                    && trackName.equalsIgnoreCase(currentSession.trackName)) {
+                return;
+            }
+
+            if (muted) {
+                currentMusicTrack = trackName;
+                return;
+            }
+
+            final int thisRequestId = ++sessionCounter;
+            final MusicSession oldSession = currentSession;
+            currentMusicTrack = trackName;
+
+            Runnable startNew = () -> {
+                synchronized (musicLock) {
+                    if (thisRequestId != sessionCounter || muted) {
+                        return;
+                    }
+                    MusicSession newSession = new MusicSession(thisRequestId, trackName);
+                    currentSession = newSession;
+
+                    newSession.thread = new Thread(() -> {
+                        runStreamingLoop(newSession, 0.0f, 1.0f, fadeDurationMs);
+                    }, "MusicStream-" + trackName);
+                    newSession.thread.setDaemon(true);
+                    newSession.thread.start();
+                }
+            };
+
+            if (oldSession != null && oldSession.running) {
+                fadeOutAndStop(oldSession, fadeDurationMs, startNew);
+            } else {
+                startNew.run();
+            }
+        }
+    }
+
+    private void runStreamingLoop(MusicSession session, float initialFade, float targetFade, long fadeDurationMs) {
+        SourceDataLine line = null;
+        AudioInputStream ais = null;
+        try {
+            ais = findAudioStream(session.trackName);
+            if (ais == null) {
+                System.out.println("[SoundManager] Musique / Ambiance '" + session.trackName + "' introuvable.");
+                synchronized (musicLock) {
+                    if (currentSession == session) {
+                        currentSession = null;
+                        currentMusicTrack = null;
+                    }
+                }
+                return;
+            }
+
+            AudioFormat format = ais.getFormat();
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+
+            if (!AudioSystem.isLineSupported(info)) {
+                AudioFormat pcmFormat = new AudioFormat(
+                    AudioFormat.Encoding.PCM_SIGNED,
+                    format.getSampleRate(),
+                    16,
+                    format.getChannels(),
+                    format.getChannels() * 2,
+                    format.getSampleRate(),
+                    false
+                );
+                ais = AudioSystem.getAudioInputStream(pcmFormat, ais);
+                format = pcmFormat;
+                info = new DataLine.Info(SourceDataLine.class, format);
+            }
+
+            line = (SourceDataLine) AudioSystem.getLine(info);
+            int bufferSize = (int) (format.getFrameSize() * Math.max(2048, format.getSampleRate() * 0.1));
+            line.open(format, bufferSize);
+            session.line = line;
+            session.fadeMultiplier = initialFade;
+            updateLineVolume(line, session.fadeMultiplier);
+            line.start();
+
+            if (fadeDurationMs > 0 && targetFade > initialFade) {
+                startFade(session, initialFade, targetFade, fadeDurationMs, null);
+            }
+
+            byte[] buffer = new byte[4096];
+            while (session.running && !Thread.currentThread().isInterrupted()) {
+                int bytesRead = ais.read(buffer, 0, buffer.length);
+                if (bytesRead == -1) {
+                    try {
+                        ais.close();
+                    } catch (Exception ignored) {}
+                    ais = findAudioStream(session.trackName);
+                    if (ais == null) break;
+                    continue;
+                }
+                if (!session.running) break;
+                line.write(buffer, 0, bytesRead);
+            }
+
+        } catch (Exception ignored) {
+        } finally {
+            if (line != null) {
+                try {
+                    if (line.isRunning()) line.stop();
+                    line.close();
+                } catch (Exception ignored) {}
+            }
+            if (ais != null) {
+                try {
+                    ais.close();
+                } catch (Exception ignored) {}
+            }
+            synchronized (musicLock) {
+                if (currentSession == session) {
+                    currentSession = null;
+                    currentMusicTrack = null;
+                }
+            }
+        }
+    }
+
+    private void startFade(MusicSession session, float fromVal, float toVal, long durationMs, Runnable onComplete) {
+        if (session.fadeThread != null && session.fadeThread.isAlive()) {
+            session.fadeThread.interrupt();
+        }
+        if (durationMs <= 0) {
+            session.fadeMultiplier = toVal;
+            updateLineVolume(session.line, toVal);
+            if (onComplete != null) onComplete.run();
             return;
         }
 
-        stopMusic();
-
-        currentMusicTrack = trackName;
-        if (muted) return;
-
-        musicRunning = true;
-        musicThread = new Thread(() -> {
-            while (musicRunning) {
-                SourceDataLine line = null;
-                AudioInputStream ais = null;
+        Thread fadeThread = new Thread(() -> {
+            long startTime = System.currentTimeMillis();
+            while (session.running && (System.currentTimeMillis() - startTime < durationMs)) {
+                long elapsed = System.currentTimeMillis() - startTime;
+                float progress = Math.min(1.0f, (float) elapsed / durationMs);
+                session.fadeMultiplier = fromVal + (toVal - fromVal) * progress;
+                updateLineVolume(session.line, session.fadeMultiplier);
                 try {
-                    ais = findAudioStream(currentMusicTrack);
-                    if (ais == null) {
-                        System.out.println("[SoundManager] Musique / Ambiance '" + currentMusicTrack + "' introuvable.");
-                        synchronized (SoundManager.this) {
-                            musicRunning = false;
-                            currentMusicTrack = null;
-                        }
-                        break;
-                    }
-
-                    AudioFormat format = ais.getFormat();
-                    DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
-
-                    if (!AudioSystem.isLineSupported(info)) {
-                        AudioFormat pcmFormat = new AudioFormat(
-                            AudioFormat.Encoding.PCM_SIGNED,
-                            format.getSampleRate(),
-                            16,
-                            format.getChannels(),
-                            format.getChannels() * 2,
-                            format.getSampleRate(),
-                            false
-                        );
-                        ais = AudioSystem.getAudioInputStream(pcmFormat, ais);
-                        format = pcmFormat;
-                        info = new DataLine.Info(SourceDataLine.class, format);
-                    }
-
-                    line = (SourceDataLine) AudioSystem.getLine(info);
-                    line.open(format);
-
-                    synchronized (SoundManager.this) {
-                        musicLine = line;
-                        setLineVolume(musicLine, getEffectiveMusicVolume());
-                    }
-                    line.start();
-
-                    byte[] buffer = new byte[16384];
-                    int bytesRead = -1;
-                    while (musicRunning && (bytesRead = ais.read(buffer, 0, buffer.length)) != -1) {
-                        line.write(buffer, 0, bytesRead);
-                    }
-
-                    if (musicRunning) {
-                        line.drain();
-                    }
-                } catch (Exception e) {
-                    if (musicRunning) {
-                        System.err.println("[SoundManager] Erreur streaming ambiance '" + currentMusicTrack + "' : " + e.getMessage());
-                    }
-                    break;
-                } finally {
-                    if (line != null) {
-                        try {
-                            line.stop();
-                            line.close();
-                        } catch (Exception ignored) {}
-                    }
-                    if (ais != null) {
-                        try {
-                            ais.close();
-                        } catch (Exception ignored) {}
-                    }
-                    synchronized (SoundManager.this) {
-                        if (musicLine == line) {
-                            musicLine = null;
-                        }
-                    }
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    return;
                 }
             }
-        }, "AudioAmbianceThread");
+            if (session.running) {
+                session.fadeMultiplier = toVal;
+                updateLineVolume(session.line, toVal);
+            }
+            if (onComplete != null) {
+                onComplete.run();
+            }
+        }, "AudioFadeThread-" + session.id);
+        session.fadeThread = fadeThread;
+        fadeThread.setDaemon(true);
+        fadeThread.start();
+    }
 
-        musicThread.setDaemon(true);
-        musicThread.start();
+    private void fadeOutAndStop(MusicSession session, long durationMs, Runnable onComplete) {
+        if (session == null || !session.running) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
+        session.fading = true;
+        float currentFade = session.fadeMultiplier;
+        long actualDuration = (long) (durationMs * currentFade);
+        if (actualDuration < 50) actualDuration = 0;
+
+        startFade(session, currentFade, 0.0f, actualDuration, () -> {
+            session.running = false;
+            if (session.line != null) {
+                try {
+                    if (session.line.isRunning()) session.line.stop();
+                    session.line.flush();
+                    session.line.close();
+                } catch (Exception ignored) {}
+                session.line = null;
+            }
+            if (session.thread != null) {
+                session.thread.interrupt();
+            }
+            if (onComplete != null) {
+                onComplete.run();
+            }
+        });
     }
 
     /**
-     * Sélectionne la musique/ambiance de fond adaptée au niveau.
+     * Sélectionne la musique/ambiance de fond adaptée au niveau avec fondu.
      */
     public void playMusicForLevel(String levelName) {
         if (levelName == null) return;
@@ -173,38 +305,87 @@ public class SoundManager {
         }
 
         savedPreviousTrack = track;
-        playMusic(track);
+        playMusic(track, 800);
     }
 
     public void startCombatMusic() {
-        if (currentMusicTrack != null && !currentMusicTrack.equalsIgnoreCase("combat") && !currentMusicTrack.equalsIgnoreCase("hurryup")) {
-            savedPreviousTrack = currentMusicTrack;
+        synchronized (musicLock) {
+            if (currentMusicTrack != null && !currentMusicTrack.equalsIgnoreCase("combat")
+                    && !currentMusicTrack.equalsIgnoreCase("hurryup")) {
+                savedPreviousTrack = currentMusicTrack;
+            }
         }
-        playMusic("combat");
+        playMusic("combat", 500);
+    }
+
+    public void fadeOutCombatMusic(long durationMs) {
+        stopMusicWithFade(durationMs, null);
     }
 
     public void restorePreviousMusic() {
-        if (savedPreviousTrack != null) {
-            playMusic(savedPreviousTrack);
+        restorePreviousMusic(1000);
+    }
+
+    public void restorePreviousMusic(long fadeDurationMs) {
+        String track;
+        synchronized (musicLock) {
+            track = savedPreviousTrack;
+        }
+        if (track != null) {
+            playMusic(track, fadeDurationMs);
+        } else {
+            stopMusicWithFade(fadeDurationMs, null);
         }
     }
 
-    public synchronized void stopMusic() {
-        musicRunning = false;
-        if (musicLine != null) {
-            try {
-                if (musicLine.isRunning()) {
-                    musicLine.stop();
+    public void stopMusic() {
+        synchronized (musicLock) {
+            sessionCounter++;
+            if (currentSession != null) {
+                currentSession.running = false;
+                currentSession.fading = true;
+                if (currentSession.fadeThread != null) {
+                    currentSession.fadeThread.interrupt();
                 }
-                musicLine.close();
-            } catch (Exception ignored) {}
-            musicLine = null;
+                if (currentSession.line != null) {
+                    try {
+                        if (currentSession.line.isRunning()) {
+                            currentSession.line.stop();
+                        }
+                        currentSession.line.flush();
+                        currentSession.line.close();
+                    } catch (Exception ignored) {}
+                    currentSession.line = null;
+                }
+                if (currentSession.thread != null) {
+                    currentSession.thread.interrupt();
+                }
+                currentSession = null;
+            }
+            currentMusicTrack = null;
         }
-        if (musicThread != null) {
-            musicThread.interrupt();
-            musicThread = null;
+    }
+
+    public void stopMusicWithFade(long durationMs, Runnable onComplete) {
+        synchronized (musicLock) {
+            sessionCounter++;
+            final MusicSession sessionToFade = currentSession;
+            currentMusicTrack = null;
+
+            if (sessionToFade != null && sessionToFade.running) {
+                fadeOutAndStop(sessionToFade, durationMs, () -> {
+                    synchronized (musicLock) {
+                        if (currentSession == sessionToFade) {
+                            currentSession = null;
+                        }
+                    }
+                    if (onComplete != null) onComplete.run();
+                });
+            } else {
+                currentSession = null;
+                if (onComplete != null) onComplete.run();
+            }
         }
-        currentMusicTrack = null;
     }
 
     /**
@@ -218,12 +399,17 @@ public class SoundManager {
                 AudioInputStream ais = findAudioStream(soundName);
                 if (ais != null) {
                     Clip clip = AudioSystem.getClip();
+                    clip.addLineListener(event -> {
+                        if (event.getType() == LineEvent.Type.STOP) {
+                            clip.close();
+                        }
+                    });
                     clip.open(ais);
                     setClipVolume(clip, getEffectiveSfxVolume());
                     clip.start();
                 }
             } catch (Exception ignored) {}
-        }).start();
+        }, "SFXThread-" + soundName).start();
     }
 
     public AudioInputStream findAudioStream(String name) {
@@ -405,21 +591,29 @@ public class SoundManager {
         } catch (Exception ignored) {}
     }
 
+    private void updateLineVolume(Line line, float fadeMultiplier) {
+        setLineVolume(line, getEffectiveMusicVolume() * fadeMultiplier);
+    }
+
     private void setClipVolume(Clip clip, float volume) {
         setLineVolume(clip, volume);
     }
 
     public void setMasterVolume(float volume) {
         this.masterVolume = Math.max(0.0f, Math.min(1.0f, volume));
-        synchronized (this) {
-            setLineVolume(musicLine, getEffectiveMusicVolume());
+        synchronized (musicLock) {
+            if (currentSession != null && currentSession.line != null) {
+                updateLineVolume(currentSession.line, currentSession.fadeMultiplier);
+            }
         }
     }
 
     public void setMusicVolume(float volume) {
         this.musicVolume = Math.max(0.0f, Math.min(1.0f, volume));
-        synchronized (this) {
-            setLineVolume(musicLine, getEffectiveMusicVolume());
+        synchronized (musicLock) {
+            if (currentSession != null && currentSession.line != null) {
+                updateLineVolume(currentSession.line, currentSession.fadeMultiplier);
+            }
         }
     }
 

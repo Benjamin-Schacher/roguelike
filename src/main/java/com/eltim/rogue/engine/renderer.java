@@ -692,6 +692,17 @@ public class renderer extends JPanel {
                 g2d.drawString(wrapped.get(i), bx + (int)(25 * scale), by + (int)(58 * scale) + i * (int)(16 * scale));
             }
             startOptionsY = by + (int)(60 * scale) + wrapped.size() * (int)(16 * scale) + (int)(15 * scale);
+        } else if (InteractionSysteme.getTarget() instanceof com.eltim.rogue.entity.environment.InteractionTile) {
+            com.eltim.rogue.entity.environment.InteractionTile it = (com.eltim.rogue.entity.environment.InteractionTile) InteractionSysteme.getTarget();
+            if (it.getDescription() != null && !it.getDescription().isEmpty()) {
+                g2d.setFont(new Font("Monospaced", Font.ITALIC, fontSmall));
+                g2d.setColor(new Color(255, 215, 120));
+                java.util.List<String> wrapped = wrapText(it.getDescription(), 55);
+                for (int i = 0; i < wrapped.size(); i++) {
+                    g2d.drawString(wrapped.get(i), bx + (int)(25 * scale), by + (int)(58 * scale) + i * (int)(16 * scale));
+                }
+                startOptionsY = by + (int)(60 * scale) + wrapped.size() * (int)(16 * scale) + (int)(15 * scale);
+            }
         }
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, fontOptSize));

@@ -136,4 +136,25 @@ public class WeaponAndInventoryTest extends TestCase {
         sm.stopMusic();
         Thread.sleep(50);
     }
+
+    public void testCombatMusicFadeAndRestore() throws Exception {
+        com.eltim.rogue.engine.sound.SoundManager sm = com.eltim.rogue.engine.sound.SoundManager.getInstance();
+        sm.playMusic("Dark Tomb", 100);
+        assertEquals("Dark Tomb", sm.getCurrentMusicTrack());
+
+        sm.startCombatMusic();
+        assertEquals("combat", sm.getCurrentMusicTrack());
+
+        // Fade out combat music
+        sm.fadeOutCombatMusic(100);
+        Thread.sleep(150);
+        assertNull(sm.getCurrentMusicTrack());
+
+        // Restore previous music
+        sm.restorePreviousMusic(100);
+        Thread.sleep(150);
+        assertEquals("Dark Tomb", sm.getCurrentMusicTrack());
+
+        sm.stopMusic();
+    }
 }

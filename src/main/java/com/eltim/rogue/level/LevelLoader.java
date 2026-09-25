@@ -31,6 +31,7 @@ public class LevelLoader {
         public List<String> layout = new ArrayList<>();
         public Map<Character, List<String>> descriptions = new HashMap<>();
         public Map<Character, String> monstersConfig = new HashMap<>();
+        public Map<String, String> specificMonstersConfig = new HashMap<>();
         public Map<Character, String> npcsConfig = new HashMap<>();
         public Map<String, String> transitions = new HashMap<>();
         public Map<Character, Boolean> decorations = new HashMap<>();
@@ -110,8 +111,28 @@ public class LevelLoader {
                 case "MONSTERS":
                     if (line.contains("=")) {
                         String[] parts = line.split("=", 2);
-                        char sym = parts[0].trim().charAt(0);
-                        data.monstersConfig.put(sym, parts[1].trim());
+                        String keyPart = parts[0].trim();
+                        String valPart = parts[1].trim();
+
+                        if (keyPart.contains(",") || keyPart.contains("@") || (keyPart.contains("(") && keyPart.contains(")"))) {
+                            // Format de coordonnées pour spécifier un monstre en particulier (ex: "19,10" ou "(19,10)" ou "M(19,10)" ou "M@19,10")
+                            String coordsOnly = keyPart;
+                            if (coordsOnly.contains("@")) {
+                                coordsOnly = coordsOnly.substring(coordsOnly.indexOf("@") + 1);
+                            }
+                            coordsOnly = coordsOnly.replaceAll("[^0-9,]", "").trim();
+                            String[] xy = coordsOnly.split(",");
+                            if (xy.length == 2) {
+                                try {
+                                    int sx = Integer.parseInt(xy[0].trim());
+                                    int sy = Integer.parseInt(xy[1].trim());
+                                    data.specificMonstersConfig.put(sx + "," + sy, valPart);
+                                } catch (NumberFormatException ignored) {}
+                            }
+                        } else if (!keyPart.isEmpty()) {
+                            char sym = keyPart.charAt(0);
+                            data.monstersConfig.put(sym, valPart);
+                        }
                     }
                     break;
 
@@ -190,7 +211,11 @@ public class LevelLoader {
 
         map m = new map(width, height);
         if (data.music != null && !data.music.isEmpty()) {
-            com.eltim.rogue.engine.sound.SoundManager.getInstance().playMusic(data.music);
+            if ("none".equalsIgnoreCase(data.music.trim()) || "silence".equalsIgnoreCase(data.music.trim())) {
+                com.eltim.rogue.engine.sound.SoundManager.getInstance().stopMusicWithFade(1000, null);
+            } else {
+                com.eltim.rogue.engine.sound.SoundManager.getInstance().playMusic(data.music, 1000);
+            }
         } else {
             com.eltim.rogue.engine.sound.SoundManager.getInstance().playMusicForLevel(data.name);
         }
@@ -202,7 +227,13 @@ public class LevelLoader {
             for (int x = 0; x < width; x++) {
                 char c = (x < row.length()) ? row.charAt(x) : ' ';
 
-                if (c == '#' || c == '|' || c == '_') {
+                String posKey = x + "," + y;
+                if (data.specificMonstersConfig.containsKey(posKey)) {
+                    m.setTile(x, y, new tile(' ', true));
+                    char sym = (c != ' ' && c != '#' && c != '1') ? c : 'M';
+                    monster mon = createMonster(x, y, sym, data.specificMonstersConfig.get(posKey));
+                    m.addEntity(mon);
+                } else if (c == '#' || c == '|' || c == '_') {
                     m.setTile(x, y, new tile(c, false));
                 } else if (c == '1' || c == 's' || c == '%') {
                     m.setTile(x, y, new tile(' ', true));
@@ -212,6 +243,14 @@ public class LevelLoader {
                     m.addEntity(new com.eltim.rogue.entity.environment.InteractionTile(x, y, c, text));
                 } else if (c == '^') {
                     m.setTile(x, y, new tile('^', true));
+                } else if (data.monstersConfig.containsKey(c)) {
+                    m.setTile(x, y, new tile(' ', true));
+                    monster mon = createMonster(x, y, c, data.monstersConfig.get(c));
+                    m.addEntity(mon);
+                } else if (data.npcsConfig.containsKey(c)) {
+                    m.setTile(x, y, new tile(' ', true));
+                    npc companion = createNPC(x, y, c, data.npcsConfig.get(c));
+                    m.addEntity(companion);
                 } else if (c == 'L' || c == 'U' || c == '$' || c == 'E' || c == 'G' || c == 'T' || c == 'B' || c == 'A' || c == 'R' || c == 'Z' || c == 'S' || data.chestsConfig.containsKey(c)) {
                     m.setTile(x, y, new tile(' ', true));
                     chestTypeEnum type = chestTypeEnum.COMMON;
@@ -252,14 +291,6 @@ public class LevelLoader {
                     m.addEntity(new DescriptionMarker(x, y, text));
                 } else if (data.decorations.containsKey(c)) {
                     m.setTile(x, y, new tile(c, data.decorations.get(c)));
-                } else if (data.monstersConfig.containsKey(c)) {
-                    m.setTile(x, y, new tile(' ', true));
-                    monster mon = createMonster(x, y, c, data.monstersConfig.get(c));
-                    m.addEntity(mon);
-                } else if (data.npcsConfig.containsKey(c)) {
-                    m.setTile(x, y, new tile(' ', true));
-                    npc companion = createNPC(x, y, c, data.npcsConfig.get(c));
-                    m.addEntity(companion);
                 } else if (c == '@') {
                     m.setTile(x, y, new tile(' ', true));
                     if (p != null) {

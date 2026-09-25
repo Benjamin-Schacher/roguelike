@@ -220,6 +220,8 @@ plusieur type de coffre :
 
 dans les coffre classique qu'ion peux trouver a travers les niveaux il y a forcement 1 à 3 loot d'une qualité egale a la qualité du coffre. Donc un coffre de type UNCOMMON loot 1 a 3 objet UNCOMMON et un coffre de type COMMON loot 1 a 3 objet COMMON.
 
+Une fois ouvert un coffre devient un simple décort non interactif
+
 néanmoins certain coffre spéciale pourrons contenir des loot précis spécialment lister. (je veux que tu pense a des coffre spécial en plus des coffre de base)
 
 ---------------------------------------- Combat ----------------------------------------

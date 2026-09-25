@@ -21,7 +21,8 @@ public class chest extends entity implements Interactable {
     private boolean randomLoot;
     private chestTypeEnum quality;
     private boolean hasGeneratedLoot;
-
+    private boolean allowReinteraction = false;
+ 
     public chest(int x, int y, char symbol, boolean randomLoot, chestTypeEnum quality) {
         super(x, y, symbol);
         this.loot = new ArrayList<>();
@@ -135,8 +136,19 @@ public class chest extends entity implements Interactable {
         this.isOpen = open;
     }
 
+    public boolean isAllowReinteraction() {
+        return allowReinteraction;
+    }
+
+    public void setAllowReinteraction(boolean allowReinteraction) {
+        this.allowReinteraction = allowReinteraction;
+    }
+
     @Override
     public List<String> getInteractionOptions(player p) {
+        if (!allowReinteraction && isOpen()) {
+            return new ArrayList<>(); // Déjà pillé : aucune option d'interaction de base
+        }
         List<String> options = new ArrayList<>();
         options.add("Ouvrir");
         options.add("Partir");

@@ -32,6 +32,8 @@ public class mouvementSysteme {
                 e.setX(newX);
                 e.setY(newY);
                 moved = true;
+            } else if (targetEntity instanceof com.eltim.rogue.entity.environment.chest && ((com.eltim.rogue.entity.environment.chest) targetEntity).isOpen() && !((com.eltim.rogue.entity.environment.chest) targetEntity).isAllowReinteraction()) {
+                // Coffre déjà ouvert/pillé : inerte, aucune interaction
             } else {
                 // Lancer l'interaction uniquement si le menu n'est pas déjà ouvert
                 if (!InteractionSysteme.isMenuOpen()) {

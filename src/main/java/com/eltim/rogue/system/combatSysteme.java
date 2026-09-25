@@ -168,6 +168,9 @@ public class combatSysteme {
                 if (elapsed >= DEBOUNCE_MS) {
                     combatOpen = false;
                     com.eltim.rogue.engine.inputHandler.clearInput();
+                    if (isVictory) {
+                        com.eltim.rogue.engine.sound.SoundManager.getInstance().restorePreviousMusic(1000);
+                    }
                 }
             }
             return;
@@ -205,6 +208,7 @@ public class combatSysteme {
                 return;
             }
             combatOpen = false; 
+            com.eltim.rogue.engine.sound.SoundManager.getInstance().restorePreviousMusic(1000);
             com.eltim.rogue.engine.inputHandler.clearInput();
         }
     }
@@ -572,7 +576,7 @@ public class combatSysteme {
         selection = 0;
 
         com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("victory");
-        com.eltim.rogue.engine.sound.SoundManager.getInstance().restorePreviousMusic();
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().fadeOutCombatMusic(1000);
 
         combatLog.add(">>> VICTOIRE !!! <<<");
 
@@ -623,6 +627,7 @@ public class combatSysteme {
         options.add("[ Continuer ]");
         selection = 0;
         com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("defeat");
+        com.eltim.rogue.engine.sound.SoundManager.getInstance().fadeOutCombatMusic(1000);
         combatLog.add(">>> DÉFAITE ! GAME OVER <<<");
     }
 

@@ -17,7 +17,6 @@ public class tutoLevel extends TextLevel {
 
     public tutoLevel() {
         super("levels/tuto.txt");
-        com.eltim.rogue.engine.sound.SoundManager.getInstance().playMusic("Dark Tomb");
     }
 
     @Override
@@ -56,10 +55,12 @@ public class tutoLevel extends TextLevel {
         // 2. Interaction avec l'Autel de Karin
         if (target instanceof InteractionTile && attacker instanceof player) {
             InteractionTile it = (InteractionTile) target;
-            String text = (it.getActionName() + " " + it.getSecretEffectText()).toLowerCase();
-            if (text.contains("karin")) {
+            String tag = it.getTag().toLowerCase();
+            String text = (it.getActionName() + " " + it.getSecretEffectText() + " " + it.getDescription()).toLowerCase();
+            if (tag.contains("tuto") || tag.contains("karin") || text.contains("karin")) {
                 if (action.equalsIgnoreCase("Examiner")) {
-                    ExplorationLog.addDescription("Un ancien autel à la gloire de Karin, dieu des voleurs.");
+                    String desc = it.getDescription();
+                    ExplorationLog.addDescription(desc != null && !desc.isEmpty() ? desc : "Un ancien autel à la gloire de Karin, dieu des voleurs.");
                     return true;
                 } else if (!action.equalsIgnoreCase("Quitter") && !action.equalsIgnoreCase("Partir")) {
                     handleKarinPrayer((player) attacker, it, currentMap);
@@ -75,9 +76,12 @@ public class tutoLevel extends TextLevel {
     public String getCustomExamineText(entity target) {
         if (target instanceof InteractionTile) {
             InteractionTile it = (InteractionTile) target;
-            String text = (it.getActionName() + " " + it.getSecretEffectText()).toLowerCase();
-            if (text.contains("karin")) {
-                return "Un ancien autel à la gloire de Karin, dieu des voleurs.";
+            String tag = it.getTag().toLowerCase();
+            String text = (it.getActionName() + " " + it.getSecretEffectText() + " " + it.getDescription()).toLowerCase();
+            if (tag.contains("tuto") || tag.contains("karin") || text.contains("karin")) {
+                return (it.getDescription() != null && !it.getDescription().isEmpty())
+                        ? it.getDescription()
+                        : "Un ancien autel à la gloire de Karin, dieu des voleurs.";
             }
         }
         return null;
