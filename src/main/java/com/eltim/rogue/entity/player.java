@@ -13,6 +13,7 @@ public class player extends entity {
 
     public classe classe;
     private boolean pendingSubclassChoice = false;
+    public boolean hasPrayedAtAltar = false;
 
     private List<item> inventory = new ArrayList<>();
     public List<item> getInventory() { return inventory; }

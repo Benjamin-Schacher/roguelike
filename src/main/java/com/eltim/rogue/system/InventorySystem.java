@@ -225,10 +225,12 @@ public class InventorySystem {
                 activeChar.helmet = eq;
                 break;
             case LEGGINGS:
+            case LEGS:
                 if (activeChar.leggings != null) p.getInventory().add(activeChar.leggings);
                 activeChar.leggings = eq;
                 break;
             case SHOES:
+            case FOOT:
                 if (activeChar.shoes != null) p.getInventory().add(activeChar.shoes);
                 activeChar.shoes = eq;
                 break;
@@ -237,6 +239,7 @@ public class InventorySystem {
                 activeChar.gloves = eq;
                 break;
             case NECKLACE:
+            case NECK:
                 if (activeChar.necklace != null) p.getInventory().add(activeChar.necklace);
                 activeChar.necklace = eq;
                 break;
@@ -312,7 +315,14 @@ public class InventorySystem {
             case 6: unequipped = activeChar.ring1; activeChar.ring1 = null; break;
             case 7: unequipped = activeChar.ring2; activeChar.ring2 = null; break;
             case 8: unequipped = activeChar.rightHand; activeChar.rightHand = null; break;
-            case 9: unequipped = activeChar.leftHand; activeChar.leftHand = null; break;
+            case 9:
+                if (activeChar.leftHand == null && activeChar.rightHand != null && activeChar.rightHand.isTwoHanded()) {
+                    unequipped = activeChar.rightHand;
+                    activeChar.rightHand = null;
+                    showMessage("Arme à deux mains déséquipée.");
+                    break;
+                }
+                unequipped = activeChar.leftHand; activeChar.leftHand = null; break;
             case 10: unequipped = activeChar.secondaryWeapon; activeChar.secondaryWeapon = null; break;
         }
         if (unequipped != null) {
@@ -327,4 +337,5 @@ public class InventorySystem {
     public static int getInventoryIndex() { return inventoryIndex; }
     public static boolean isPromptingWeaponSlot() { return isPromptingWeaponSlot; }
     public static int getWeaponPromptIndex() { return weaponPromptIndex; }
+    public static weapon getWeaponToEquip() { return weaponToEquip; }
 }

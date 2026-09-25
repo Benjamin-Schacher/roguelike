@@ -4,12 +4,14 @@ import com.eltim.rogue.entity.monster;
 import com.eltim.rogue.entity.npc;
 import com.eltim.rogue.entity.player;
 import com.eltim.rogue.entity.base.entity;
+import com.eltim.rogue.entity.base.Interactable;
 import com.eltim.rogue.entity.environment.door;
 import com.eltim.rogue.entity.environment.doorStateEnum;
 import com.eltim.rogue.entity.environment.DescriptionMarker;
 import com.eltim.rogue.item.key;
 import com.eltim.rogue.item.base.item;
 import com.eltim.rogue.world.map;
+import com.eltim.rogue.level.level;
 
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Queue;
 
 public class InteractionSysteme {
+    private static level currentLevel = null;
     private static boolean menuOpen = false;
     private static entity menuAttacker = null;
     private static entity menuTarget = null;
@@ -27,6 +30,14 @@ public class InteractionSysteme {
     private static long menuOpenTime = 0;
     // Description courante pour la popup ? (géré par le GameState DESCRIPTION)
     private static String currentDescription = null;
+
+    public static void setCurrentLevel(level lvl) {
+        currentLevel = lvl;
+    }
+
+    public static level getCurrentLevel() {
+        return currentLevel;
+    }
 
     public static void onEncounter(entity attacker, entity target, map gameMap) {
         // Cas spécial : marqueur de description
@@ -68,33 +79,33 @@ public class InteractionSysteme {
 
         com.eltim.rogue.engine.inputHandler.clearInput();
 
-        
-        String targetClass = target.getClass().getSimpleName().toLowerCase();
-        
+        // 1. Vérification si le niveau courant configure des options d'interaction personnalisées
+        if (currentLevel != null && currentLevel.onConfigureInteractionOptions(attacker, target, options)) {
+            selection = 0;
+            return;
+        }
+
+        // 2. Éléments interactifs polymorphes (portes, coffres, tuiles d'interaction...)
+        if (target instanceof Interactable && attacker instanceof player) {
+            List<String> interactableOptions = ((Interactable) target).getInteractionOptions((player) attacker);
+            if (interactableOptions == null || interactableOptions.isEmpty()) {
+                menuOpen = false;
+                return;
+            }
+            options.addAll(interactableOptions);
+            selection = 0;
+            return;
+        }
+
         if (target instanceof monster) {
             options.add("Combattre");
             options.add("Utiliser un objet");
             options.add("Fuir");
-        } else if (target instanceof door) {
-            door d = (door) target;
-            if (d.getState() == doorStateEnum.OPEN) {
-                // Porte déjà ouverte, on passe à travers
+        } else if (target instanceof npc) {
+            if (attacker instanceof player && ((player) attacker).getParty().contains(target)) {
                 menuOpen = false;
                 return;
             }
-            if (d.getState() == doorStateEnum.NORMAL) {
-                options.add("Ouvrir");
-            } else if (d.getState() == doorStateEnum.LOCKED) {
-                options.add("Déverrouiller (Clé)");
-            } else if (d.getState() == doorStateEnum.OLD) {
-                options.add("Déverrouiller (Clé)");
-                options.add("Forcer (Force)");
-            }
-            options.add("Partir");
-        } else if (targetClass.equals("chest")) {
-            options.add("Ouvrir");
-            options.add("Partir");
-        } else if (target instanceof npc) {
             options.add("Discuter");
             if (attacker instanceof player) {
                 player p = (player) attacker;
@@ -104,11 +115,6 @@ public class InteractionSysteme {
             }
             options.add("Combattre");
             options.add("Utiliser un objet");
-            options.add("Quitter");
-        } else if (target instanceof com.eltim.rogue.entity.environment.InteractionTile) {
-            com.eltim.rogue.entity.environment.InteractionTile it = (com.eltim.rogue.entity.environment.InteractionTile) target;
-            options.add(it.getActionName());
-            options.add("Examiner");
             options.add("Quitter");
         } else {
             options.add("Fermer");
@@ -153,6 +159,24 @@ public class InteractionSysteme {
 
     public static void executeAction(String action) {
         System.out.println("Action choisie : " + action);
+
+        // 1. Délégation au niveau courant pour les interactions personnalisées (dialogues, autels...)
+        if (currentLevel != null && currentLevel.onCustomInteraction(menuAttacker, menuTarget, action, selection, currentMap, options)) {
+            if (!options.isEmpty() && com.eltim.rogue.system.dialogue.VarainDialogue.isDialogueActive()) {
+                selection = 0;
+                menuOpen = true;
+                return;
+            }
+            menuOpen = false;
+            return;
+        }
+
+        if (com.eltim.rogue.system.dialogue.VarainDialogue.getNpcSpeech() != null) {
+            com.eltim.rogue.system.dialogue.VarainDialogue.closeDialogue();
+            menuOpen = false;
+            return;
+        }
+
         menuOpen = false;
 
         if (action.equals("Combattre") || action.equals("Utiliser un objet")) {
@@ -168,128 +192,17 @@ public class InteractionSysteme {
                     }
                     System.out.println(n.getName() + " a rejoint le groupe !");
                 }
-            } else if (action.equals("Ouvrir") && menuTarget instanceof door) {
-                door d = (door) menuTarget;
-                if (d.getState() == doorStateEnum.NORMAL || d.getState() == doorStateEnum.OLD) {
-                    d.setState(doorStateEnum.OPEN);
-                    d.setSymbol('D');
-                    com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
-                    System.out.println("La porte s'ouvre.");
+            } else if (menuTarget instanceof Interactable && menuAttacker instanceof player) {
+                String examineText = (currentLevel != null) ? currentLevel.getCustomExamineText(menuTarget) : null;
+                if (action.equalsIgnoreCase("Examiner") && examineText != null) {
+                    ExplorationLog.addDescription(examineText);
                 } else {
-                    System.out.println("La porte est verrouillée !");
+                    ((Interactable) menuTarget).handleInteraction((player) menuAttacker, action, currentMap);
                 }
-            } else if (action.equals("Déverrouiller (Clé)") && menuTarget instanceof door) {
-                if (menuAttacker instanceof player) {
-                    player p = (player) menuAttacker;
-                    item foundKey = null;
-                    for (item it : p.getInventory()) {
-                        if (it instanceof key) {
-                            foundKey = it;
-                            break;
-                        }
-                    }
-                    if (foundKey != null) {
-                        door d = (door) menuTarget;
-                        key k = (key) foundKey;
-                        if (k.getKeyCode() == (d.getDoorCode())) {
-                            p.getInventory().remove(foundKey);
-                            d.setState(doorStateEnum.OPEN);
-                            d.setSymbol('D');
-                            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
-                            System.out.println("Vous utilisez la clé. La porte s'ouvre !");
-                        } else {
-                            System.out.println("Vous n'avez pas la bonne clé !");
-                        }
-                    } else {
-                        System.out.println("Vous n'avez pas de clé !");
-                    }
-                }
-            } else if (action.equals("Forcer (Force)") && menuTarget instanceof door) {
-                if (menuAttacker instanceof player) {
-                    player p = (player) menuAttacker;
-                    int forceMod = diceRollSysteme.getModifier(p.getForce());
-                    int roll = (int)(Math.random() * 20) + 1;
-                    boolean success = (roll + forceMod) >= 14;
-                    ExplorationLog.addRoll("Forcer la porte", roll, forceMod, 14);
-                    if (success) {
-                        door d = (door) menuTarget;
-                        d.setState(doorStateEnum.OPEN);
-                        d.setSymbol('D');
-                        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("door_open");
-                    } else {
-                        int damage = (int)(Math.random() * 4) + 1;
-                        p.setLifePoint(p.getLifePoint() - damage);
-                        ExplorationLog.add("  ↳ Blessé de " + damage + " PV");
-                    }
-                }
-            } else if (action.equals("Ouvrir") && menuTarget.getClass().getSimpleName().toLowerCase().equals("chest")) {
-                if (menuAttacker instanceof player) {
-                    player p = (player) menuAttacker;
-                    com.eltim.rogue.entity.environment.chest c = (com.eltim.rogue.entity.environment.chest) menuTarget;
-                    if (!c.isOpen()) {
-                        c.setOpen(true);
-                        com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("chest_open");
-                        if (c.isTrapped()) {
-                            int trapDamage = (int)(Math.random() * 6) + 1;
-                            p.setLifePoint(p.getLifePoint() - trapDamage);
-                            com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("trap");
-                            ExplorationLog.addDescription("PIÈGE ! Le coffre explose en s'ouvrant (" + trapDamage + " dégâts) !");
-                        }
-                        List<item> loot = c.getLoot();
-                        if (loot.isEmpty()) {
-                            ExplorationLog.addDescription("Le coffre est vide.");
-                        } else {
-                            for (item it : loot) {
-                                p.getInventory().add(it);
-                                ExplorationLog.addDescription("Obtenu : " + it.getName());
-                            }
-                            c.getLoot().clear();
-                        }
-                    } else {
-                        ExplorationLog.addDescription("Ce coffre a déjà été vidé.");
-                    }
-                }
-            } else if (menuTarget instanceof com.eltim.rogue.entity.environment.InteractionTile) {
-                com.eltim.rogue.entity.environment.InteractionTile it = (com.eltim.rogue.entity.environment.InteractionTile) menuTarget;
-                if (action.equalsIgnoreCase("Examiner")) {
-                    ExplorationLog.addDescription("Un ancien autel à la gloire de Karin, dieu des voleurs.");
-                } else if (!action.equalsIgnoreCase("Quitter") && !action.equalsIgnoreCase("Partir")) {
-                    if (menuAttacker instanceof player) {
-                        player p = (player) menuAttacker;
-                        String text = (it.getActionName() + " " + it.getSecretEffectText()).toLowerCase();
-                        if (text.contains("karin")) {
-                            if (p.getBelief() == com.eltim.rogue.entity.base.Belief.KARIN) {
-                                if (currentMap != null) {
-                                    door cellDoor = null;
-                                    double minDistance = Double.MAX_VALUE;
-                                    for (entity e : currentMap.getEntities()) {
-                                        if (e instanceof door) {
-                                            door d = (door) e;
-                                            if (d.getState() == doorStateEnum.OLD) {
-                                                cellDoor = d;
-                                                break;
-                                            }
-                                            double dist = Math.hypot(d.getX() - it.getX(), d.getY() - it.getY());
-                                            if (dist < minDistance) {
-                                                minDistance = dist;
-                                                cellDoor = d;
-                                            }
-                                        }
-                                    }
-                                    if (cellDoor != null) {
-                                        cellDoor.setState(doorStateEnum.OPEN);
-                                        cellDoor.setSymbol('D');
-                                    }
-                                }
-                                ExplorationLog.addDescription("Succès : Le gond de la porte lâche, usé par la vieillesse ! La porte s'ouvre !");
-                            } else {
-                                ExplorationLog.addDescription("Échec : Vous priez Karin, mais vous n'êtes pas son fidèle. Rien ne se passe.");
-                            }
-                        } else {
-                            ExplorationLog.addDescription("Interaction réalisée.");
-                        }
-                    }
-                }
+            } else if (menuTarget instanceof com.eltim.rogue.entity.environment.DescriptionMarker) {
+                com.eltim.rogue.entity.environment.DescriptionMarker dm = (com.eltim.rogue.entity.environment.DescriptionMarker) menuTarget;
+                dm.markRead();
+                ExplorationLog.addDescription(dm.getDescription());
             } else if (action.equals("Fuir")) {
                 List<entity> enemies = findMonsterGroup(menuAttacker, menuTarget, currentMap);
                 int playerDexMod = diceRollSysteme.getModifier(menuAttacker.getAgilite());

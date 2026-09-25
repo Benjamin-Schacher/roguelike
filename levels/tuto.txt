@@ -7,7 +7,7 @@ spawn = 15,13
 "Le mort vivant sanble a peine conscient, il ne devrais pas faire long feu !" | "Un hotel a la gloire de Karin, dieux des voleurs. On dit qu'il a réussi a volé des étoiles !" | "Salot de barons ! Il ma tout pris, sauf ma vengeance ! Et je vais allez la lui foutre dans la geule... Tien quesque c'est que ce bruit... ?" | "Merde c'est quoi ce truc, on dirait que le garde a subit une malédiction. Cette porte semble vieille et fragile, je dois pouvoir la forcer." | "Peux être que ce bandit accepterait de m'aider a sotir d'ici ? Comme on dit "Dans la merde on patoge tous ensemble" !"
 
 [MONSTERS]
-M = Garde zombie | HP:15 | XP:25 | STR:8 | AGI:4 | SAG:6 | INT:4 | CHR:14 | CON:18 | LOOT:Clé rouillée:152
+M = Mort vivant | LOOT: Clé de cellule : 152
 
 [NPCS]
 V = Varain | LVL:1 | HP:8 | STR:12 | AGI:12 | SAG:6 | INT:14 | CHR:12 | CON:8 | LOOT:Clé rouillée:152

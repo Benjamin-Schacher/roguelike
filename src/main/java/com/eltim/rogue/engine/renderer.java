@@ -179,8 +179,18 @@ public class renderer extends JPanel {
         for (entity e : currentMap.getEntities()) {
             char c = e.getSymbol();
             
-            if (e instanceof com.eltim.rogue.entity.player) g2d.setColor(new Color(100, 180, 255)); 
-            else if (c == 'M') g2d.setColor(Color.RED);
+            if (e instanceof com.eltim.rogue.entity.player) {
+                g2d.setColor(new Color(100, 180, 255)); // Bleu clair du héros
+            } else if (e instanceof com.eltim.rogue.entity.npc) {
+                com.eltim.rogue.entity.player p = (playerObj instanceof com.eltim.rogue.entity.player) ? (com.eltim.rogue.entity.player) playerObj : null;
+                if (p != null && p.getParty().contains(e)) {
+                    g2d.setColor(new Color(100, 180, 255)); // Même couleur que le héros quand il te suit
+                } else {
+                    g2d.setColor(new Color(50, 150, 255)); // Bleu si PNJ neutre sur la carte
+                }
+            } else if (e instanceof com.eltim.rogue.entity.monster || c == 'M') {
+                g2d.setColor(new Color(220, 50, 50)); // Rouge pour les monstres
+            }
             else if (e instanceof com.eltim.rogue.entity.environment.door) {
                 com.eltim.rogue.entity.environment.door d = (com.eltim.rogue.entity.environment.door) e;
                 if (d.isOpen()) {
@@ -190,10 +200,15 @@ public class renderer extends JPanel {
                 }
             }
             else if (e instanceof com.eltim.rogue.entity.environment.DescriptionMarker) {
-                g2d.setColor(Color.ORANGE);
+                com.eltim.rogue.entity.environment.DescriptionMarker dm = (com.eltim.rogue.entity.environment.DescriptionMarker) e;
+                if (dm.isAlreadyRead()) {
+                    g2d.setColor(new Color(255, 215, 0, 75)); // Opacité fortement atténuée une fois lu ou traversé
+                } else {
+                    g2d.setColor(new Color(255, 215, 0)); // Doré éclatant
+                }
             }
             else if (e instanceof com.eltim.rogue.entity.environment.InteractionTile) {
-                g2d.setColor(new Color(255, 215, 0)); // Jaune doré pour les éléments d'interaction
+                g2d.setColor(Color.CYAN); // Cyan pour les décors interactifs
             }
             else if (e instanceof com.eltim.rogue.entity.environment.chest) {
                 com.eltim.rogue.entity.environment.chest ch = (com.eltim.rogue.entity.environment.chest) e;
@@ -532,11 +547,20 @@ public class renderer extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.drawLine(logX - (int)(10*scale), midY + (int)(10*scale), logX - (int)(10*scale), by + boxH - (int)(10*scale));
 
-        // Historique du combat coloré dynamiquement
+        // Historique du combat coloré et découpé dynamiquement (évite tout débordement)
         g2d.setFont(new Font("Monospaced", Font.PLAIN, fontLogSize));
-        java.util.List<String> log = combatSysteme.getLog();
-        for (int i = 0; i < log.size(); i++) {
-            String line = log.get(i);
+        int logLineH = Math.max(12, (int)(18 * scale));
+        int maxLogChars = Math.max(22, (int)((boxW / 2.0 - (30 * scale)) / (fontLogSize * 0.60)));
+        java.util.List<String> wrappedLog = wrapLogLines(combatSysteme.getLog(), maxLogChars);
+
+        int startLogY = midY + (int)(30 * scale);
+        int maxVisibleLines = Math.max(1, (by + boxH - (int)(15 * scale) - startLogY) / logLineH);
+        if (wrappedLog.size() > maxVisibleLines) {
+            wrappedLog = wrappedLog.subList(wrappedLog.size() - maxVisibleLines, wrappedLog.size());
+        }
+
+        for (int i = 0; i < wrappedLog.size(); i++) {
+            String line = wrappedLog.get(i);
             
             if (line.contains("CRITIQUE")) {
                 g2d.setColor(Color.YELLOW);
@@ -548,13 +572,13 @@ public class renderer extends JPanel {
                 g2d.setColor(Color.GREEN);
             } else if (line.contains("DÉFAITE") || line.contains("GAME OVER")) {
                 g2d.setColor(Color.RED);
-            } else if (line.contains("Loot") || line.contains("Gain") || line.contains("XP")) {
+            } else if (line.contains("Loot") || line.contains("Gain") || line.contains("XP") || line.contains("Obtenu")) {
                 g2d.setColor(Color.CYAN);
             } else {
                 g2d.setColor(new Color(200, 200, 200));
             }
             
-            g2d.drawString(line, logX + (int)(10*scale), midY + (int)(30 * scale) + (i * (int)(20 * scale)));
+            g2d.drawString(line, logX + (int)(10*scale), startLogY + (i * logLineH));
         }
     }
 
@@ -621,7 +645,8 @@ public class renderer extends JPanel {
         String title = " Rencontre : " + targetName + " ";
 
         int fontTitleSize = Math.max(12, (int)(18 * scale));
-        int fontOptSize = Math.max(10, (int)(16 * scale));
+        int fontOptSize = Math.max(10, (int)(15 * scale));
+        int fontSmall = Math.max(8, (int)(12 * scale));
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, fontTitleSize));
         FontMetrics fmTitle = g2d.getFontMetrics();
@@ -635,9 +660,9 @@ public class renderer extends JPanel {
             if (optW > maxTextWidth) maxTextWidth = optW;
         }
 
-        int boxWidth = Math.max((int)(380 * scale), maxTextWidth + (int)(60 * scale));
-        boxWidth = Math.min((int)(getWidth() * 0.78), boxWidth);
-        int boxHeight = (int)(250 * scale);
+        int boxWidth = Math.max((int)(480 * scale), maxTextWidth + (int)(60 * scale));
+        boxWidth = Math.min((int)(getWidth() * 0.85), boxWidth);
+        int boxHeight = (int)(280 * scale);
         int bx = (getWidth() - boxWidth) / 2;
         int by = (getHeight() - boxHeight) / 2;
 
@@ -655,18 +680,31 @@ public class renderer extends JPanel {
         g2d.drawString(title, bx + (boxWidth - titleWidth) / 2, by + (int)(30 * scale));
 
         g2d.drawLine(bx + (int)(10*scale), by + (int)(40*scale), bx + boxWidth - (int)(10*scale), by + (int)(40*scale));
-        g2d.drawLine(bx + (int)(10*scale), by + (int)(44*scale), bx + boxWidth - (int)(10*scale), by + (int)(44*scale));
+
+        String speech = com.eltim.rogue.system.dialogue.VarainDialogue.getNpcSpeech();
+        int startOptionsY = by + (int)(80 * scale);
+
+        if (speech != null) {
+            g2d.setFont(new Font("Monospaced", Font.ITALIC, fontSmall));
+            g2d.setColor(Color.CYAN);
+            java.util.List<String> wrapped = wrapText(speech, 55);
+            for (int i = 0; i < wrapped.size(); i++) {
+                g2d.drawString(wrapped.get(i), bx + (int)(25 * scale), by + (int)(58 * scale) + i * (int)(16 * scale));
+            }
+            startOptionsY = by + (int)(60 * scale) + wrapped.size() * (int)(16 * scale) + (int)(15 * scale);
+        }
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, fontOptSize));
         int sel = InteractionSysteme.getSelection();
 
         for (int i = 0; i < options.size(); i++) {
+            int yPos = startOptionsY + (i * (int)(26 * scale));
             if (i == sel) {
-                g2d.setColor(Color.WHITE);
-                g2d.drawString("=> [ " + options.get(i) + " ]", bx + (int)(30 * scale), by + (int)(90 * scale) + (i * (int)(30 * scale)));
+                g2d.setColor(Color.YELLOW);
+                g2d.drawString("=> [ " + options.get(i) + " ]", bx + (int)(30 * scale), yPos);
             } else {
                 g2d.setColor(Color.LIGHT_GRAY);
-                g2d.drawString("     " + options.get(i), bx + (int)(30 * scale), by + (int)(90 * scale) + (i * (int)(30 * scale)));
+                g2d.drawString("     " + options.get(i), bx + (int)(30 * scale), yPos);
             }
         }
     }
@@ -878,6 +916,36 @@ public class renderer extends JPanel {
         return result;
     }
 
+    public static java.util.List<String> wrapText(String text, int maxChars) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        if (text == null || text.isEmpty()) return lines;
+        if (maxChars <= 0) maxChars = 40;
+
+        String[] words = text.split(" ");
+        StringBuilder currentLine = new StringBuilder();
+
+        for (String word : words) {
+            if (currentLine.length() + word.length() + 1 > maxChars) {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder();
+                }
+                while (word.length() > maxChars) {
+                    lines.add(word.substring(0, maxChars));
+                    word = word.substring(maxChars);
+                }
+            }
+            if (currentLine.length() > 0) {
+                currentLine.append(" ");
+            }
+            currentLine.append(word);
+        }
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+        return lines;
+    }
+
     /**
      * Dessine une barre de stat (PV, Mana, XP) avec label et valeurs numériques.
      */
@@ -1077,8 +1145,9 @@ public class renderer extends JPanel {
         FontMetrics fmTitle = g2d.getFontMetrics();
         g2d.drawString(title, bx + (boxW - fmTitle.stringWidth(title)) / 2, by + (int) (28 * scale));
 
-        int startY = by + (int) (55 * scale);
-        int startX = bx + (int) (50 * scale);
+        int startY = by + (int) (52 * scale);
+        int contentW = (int) (380 * scale);
+        int startX = bx + (boxW - contentW) / 2;
         int lineSpacing = Math.max(15, (int) (22 * scale));
         int labelWidth = (int) (150 * scale);
 
@@ -1116,7 +1185,9 @@ public class renderer extends JPanel {
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, subtitleSize));
         g2d.setColor(Color.WHITE);
-        g2d.drawString("STATISTIQUES (Points restants: " + com.eltim.rogue.system.CharacterCreationSystem.getAvailablePoints() + ")", startX, currentY);
+        String statsHeader = "STATISTIQUES (Points restants: " + com.eltim.rogue.system.CharacterCreationSystem.getAvailablePoints() + ")";
+        FontMetrics fmStats = g2d.getFontMetrics();
+        g2d.drawString(statsHeader, bx + (boxW - fmStats.stringWidth(statsHeader)) / 2, currentY);
         currentY += lineSpacing;
 
         g2d.setFont(new Font("Monospaced", Font.PLAIN, textSize));
@@ -1141,13 +1212,10 @@ public class renderer extends JPanel {
         currentY += (int)(lineSpacing * 1.4);
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, subtitleSize));
-        if (currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONFIRM) {
-            g2d.setColor(Color.YELLOW);
-            g2d.drawString("> COMMENCER L'AVENTURE <", startX, currentY);
-        } else {
-            g2d.setColor(Color.LIGHT_GRAY);
-            g2d.drawString("  COMMENCER L'AVENTURE", startX, currentY);
-        }
+        String startText = (currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONFIRM) ? "> COMMENCER L'AVENTURE <" : "  COMMENCER L'AVENTURE";
+        g2d.setColor(currentField == com.eltim.rogue.system.CharacterCreationSystem.Field.CONFIRM ? Color.YELLOW : Color.LIGHT_GRAY);
+        FontMetrics fmStart = g2d.getFontMetrics();
+        g2d.drawString(startText, bx + (boxW - fmStart.stringWidth(startText)) / 2, currentY);
     }
 
     private void drawCreationLine(Graphics2D g2d, int x, int y, int labelWidth, String label, String value, boolean isSelected) {
@@ -1312,8 +1380,28 @@ public class renderer extends JPanel {
                 g2d.setColor(Color.WHITE);
                 g2d.drawString("  " + slotNames[i] + ":", leftX - 15, y);
             }
-            g2d.setColor(Color.CYAN);
-            String itemName = (equippedItems[i] != null) ? equippedItems[i].getName() : "(Vide)";
+
+            String itemName;
+            boolean isTwoHandBlocked = false;
+            if (i == 9 && activeChar.rightHand != null && activeChar.rightHand.isTwoHanded()) {
+                itemName = "Arme à deux mains équipée";
+                isTwoHandBlocked = true;
+            } else if (i == 8 && activeChar.leftHand != null && activeChar.leftHand.isTwoHanded()) {
+                itemName = "Arme à deux mains équipée";
+                isTwoHandBlocked = true;
+            } else if (equippedItems[i] != null) {
+                itemName = equippedItems[i].getName();
+            } else {
+                itemName = "(Vide)";
+            }
+
+            if (isTwoHandBlocked) {
+                g2d.setColor(new Color(255, 175, 75));
+            } else if (equippedItems[i] != null) {
+                g2d.setColor(Color.CYAN);
+            } else {
+                g2d.setColor(Color.GRAY);
+            }
             g2d.drawString(itemName, leftX + (int)(160 * scale), y);
         }
 
@@ -1366,7 +1454,7 @@ public class renderer extends JPanel {
 
         // Draw Weapon Slot Prompt
         if (com.eltim.rogue.system.InventorySystem.isPromptingWeaponSlot()) {
-            int promptW = (int)(300 * scale);
+            int promptW = (int)(320 * scale);
             int promptH = (int)(150 * scale);
             int promptX = (w - promptW) / 2;
             int promptY = (h - promptH) / 2;
@@ -1381,14 +1469,23 @@ public class renderer extends JPanel {
 
             String[] prompts = { "Main Droite", "Main Gauche", "Arme Secondaire" };
             int pIdx = com.eltim.rogue.system.InventorySystem.getWeaponPromptIndex();
+            com.eltim.rogue.item.weapon wToEquip = com.eltim.rogue.system.InventorySystem.getWeaponToEquip();
+
             for (int i = 0; i < prompts.length; i++) {
                 int py = promptY + (int)(70 * scale) + (i * (int)(25 * scale));
+                String label = prompts[i];
+                boolean disabled = (i == 1 && wToEquip != null && wToEquip.isTwoHanded())
+                                || (i == 2 && wToEquip != null && wToEquip.isForbidsSecondary());
+                if (disabled) {
+                    label += " (Indisponible)";
+                }
+
                 if (i == pIdx) {
-                    g2d.setColor(Color.WHITE);
-                    g2d.drawString("> " + prompts[i], promptX + (int)(40 * scale), py);
+                    g2d.setColor(disabled ? new Color(240, 100, 100) : Color.WHITE);
+                    g2d.drawString("> " + label, promptX + (int)(40 * scale), py);
                 } else {
-                    g2d.setColor(Color.LIGHT_GRAY);
-                    g2d.drawString("  " + prompts[i], promptX + (int)(40 * scale), py);
+                    g2d.setColor(disabled ? Color.DARK_GRAY : Color.LIGHT_GRAY);
+                    g2d.drawString("  " + label, promptX + (int)(40 * scale), py);
                 }
             }
         }
@@ -1447,26 +1544,13 @@ public class renderer extends JPanel {
         g2d.drawString(closeHint, bx + boxW - fmHint.stringWidth(closeHint) - (int)(14*scale), by + boxH - (int)(10*scale));
     }
 
-    private java.util.List<String> wrapText(String text, int maxChars) {
-        java.util.List<String> result = new java.util.ArrayList<>();
-        String[] words = text.split(" ");
-        StringBuilder current = new StringBuilder();
-        for (String word : words) {
-            if (current.length() + word.length() + 1 > maxChars && current.length() > 0) {
-                result.add(current.toString());
-                current = new StringBuilder();
-            }
-            if (current.length() > 0) current.append(" ");
-            current.append(word);
-        }
-        if (current.length() > 0) result.add(current.toString());
-        return result;
-    }
-
     private void drawSkillMenu(Graphics2D g2d, float scale, entity playerEntity) {
         if (playerEntity == null || !(playerEntity instanceof com.eltim.rogue.entity.player)) return;
         com.eltim.rogue.entity.player p = (com.eltim.rogue.entity.player) playerEntity;
-        if (p.classe == null) return;
+        
+        com.eltim.rogue.entity.classe.classe activeClasse = com.eltim.rogue.system.SkillMenuSystem.getActiveClasse(p);
+        String charName = com.eltim.rogue.system.SkillMenuSystem.getActiveCharacterName(p);
+        if (activeClasse == null) return;
 
         int w = getWidth();
         int h = getHeight();
@@ -1492,13 +1576,13 @@ public class renderer extends JPanel {
         // 1. Titre & Points de compétence
         g2d.setFont(new Font("Monospaced", Font.BOLD, titleSize));
         g2d.setColor(new Color(220, 180, 60));
-        String title = "COMPÉTENCES — " + p.classe.name.toUpperCase() + (p.classe.hasSubclass() ? " / " + p.classe.subclass.toUpperCase() : "");
+        String title = "COMPÉTENCES — " + charName.toUpperCase() + " (" + activeClasse.name.toUpperCase() + (activeClasse.hasSubclass() ? " / " + activeClasse.subclass.toUpperCase() : "") + ")";
         FontMetrics fmT = g2d.getFontMetrics();
         g2d.drawString(title, bx + (boxW - fmT.stringWidth(title)) / 2, by + (int) (26 * scale));
 
         g2d.setFont(new Font("Monospaced", Font.BOLD, bodySize));
         g2d.setColor(new Color(100, 220, 255));
-        String pts = "Points disponibles : " + p.classe.skillPoints + (p.classe.hasSubclass() ? " (Bi-classe: +1 pt/niv)" : " (Classe pure: +2 pts/niv)");
+        String pts = "Points disponibles : " + activeClasse.skillPoints + (activeClasse.hasSubclass() ? " (Bi-classe: +1 pt/niv)" : " (Classe pure: +2 pts/niv)");
         FontMetrics fmPts = g2d.getFontMetrics();
         g2d.drawString(pts, bx + (boxW - fmPts.stringWidth(pts)) / 2, by + (int) (46 * scale));
 
@@ -1520,7 +1604,7 @@ public class renderer extends JPanel {
         int tabH = (int) (32 * scale);
 
         for (int t = 0; t < 4; t++) {
-            com.eltim.rogue.entity.classe.SkillTree tree = p.classe.activeSlots[t];
+            com.eltim.rogue.entity.classe.SkillTree tree = activeClasse.activeSlots[t];
             int tabX = bx + (int) (15 * scale) + t * tabW;
             boolean isFocusedSlot = (t == selSlot);
 
@@ -1568,7 +1652,7 @@ public class renderer extends JPanel {
         g2d.setStroke(new BasicStroke(1));
         g2d.drawRect(panelX, panelY, panelW, panelH);
 
-        com.eltim.rogue.entity.classe.SkillTree activeTree = p.classe.activeSlots[selSlot];
+        com.eltim.rogue.entity.classe.SkillTree activeTree = activeClasse.activeSlots[selSlot];
 
         // CAS A : Modal de sélection d'arbre ouvert
         if (selectingTree) {
@@ -1681,19 +1765,20 @@ public class renderer extends JPanel {
             g2d.drawString(desc2, midX - fmD.stringWidth(desc2) / 2, cardY + (int) (102 * scale));
             g2d.drawString(desc3, midX - fmD.stringWidth(desc3) / 2, cardY + (int) (119 * scale));
 
-            boolean canBuyTree = (p.classe.skillPoints >= 1);
+            boolean canBuyTree = (activeClasse.skillPoints >= 1);
             g2d.setFont(new Font("Monospaced", Font.BOLD, smallSize));
             g2d.setColor(canBuyTree ? Color.GREEN : new Color(220, 100, 80));
             String actionPrompt = canBuyTree
-                    ? "⚡ [ENTRÉE] Choisir un arbre maintenant (Points restants: " + p.classe.skillPoints + ")"
+                    ? "⚡ [ENTRÉE] Choisir un arbre maintenant (Points restants: " + activeClasse.skillPoints + ")"
                     : "🔒 Points insuffisants (0 point). Gagnez un niveau pour débloquer un arbre !";
             FontMetrics fmA = g2d.getFontMetrics();
             g2d.drawString(actionPrompt, midX - fmA.stringWidth(actionPrompt) / 2, cardY + (int) (145 * scale));
 
             // Instruction bas de fenêtre
+            boolean hasParty = (p.getParty() != null && !p.getParty().isEmpty());
             g2d.setFont(new Font("Monospaced", Font.BOLD, smallSize));
             g2d.setColor(Color.LIGHT_GRAY);
-            String hint = "[Q/D ou ←/→] Emplacement  |  [ENTRÉE] Choisir arbre  |  [K/ÉCHAP] Fermer";
+            String hint = "[Q/D ou ←/→] Emplacement  |  [ENTRÉE] Choisir arbre" + (hasParty ? "  |  [TAB] Changer de perso" : "") + "  |  [K/ÉCHAP] Fermer";
             FontMetrics fmHint = g2d.getFontMetrics();
             g2d.drawString(hint, bx + (boxW - fmHint.stringWidth(hint)) / 2, by + boxH - (int) (10 * scale));
             return;
@@ -1711,8 +1796,8 @@ public class renderer extends JPanel {
 
             boolean isUnlocked = skill.unlocked;
             boolean prevUnlocked = (tier == 0) || activeTree.skills.get(tier - 1).unlocked;
-            int cost = p.classe.getSkillCost(skill);
-            boolean canBuy = !isUnlocked && prevUnlocked && p.classe.skillPoints >= cost;
+            int cost = activeClasse.getSkillCost(skill);
+            boolean canBuy = !isUnlocked && prevUnlocked && activeClasse.skillPoints >= cost;
 
             if (isSelectedTier) {
                 g2d.setColor(new Color(50, 50, 90));
@@ -1759,7 +1844,7 @@ public class renderer extends JPanel {
             g2d.setColor(new Color(100, 180, 255));
             g2d.drawRect(descX, descY, descW, descH);
 
-            int cost = p.classe.getSkillCost(focusedSkill);
+            int cost = activeClasse.getSkillCost(focusedSkill);
             g2d.setFont(new Font("Monospaced", Font.BOLD, smallSize));
             g2d.setColor(Color.CYAN);
             g2d.drawString("★ TALENT : " + focusedSkill.name.toUpperCase() + " (Arbre: " + activeTree.name + " - Tier " + focusedSkill.tier + " - Coût: " + cost + " pt" + (cost > 1 ? "s" : "") + ")",
@@ -1775,9 +1860,10 @@ public class renderer extends JPanel {
         }
 
         // Instructions bas de fenêtre
+        boolean hasParty = (p.getParty() != null && !p.getParty().isEmpty());
         g2d.setFont(new Font("Monospaced", Font.BOLD, smallSize));
         g2d.setColor(Color.LIGHT_GRAY);
-        String hint = "[Q/D ou ←/→] Arbre  |  [Z/S ou ↑/↓] Talent  |  [ENTRÉE] Débloquer  |  [K/ÉCHAP] Fermer";
+        String hint = "[Q/D ou ←/→] Arbre  |  [Z/S ou ↑/↓] Talent  |  [ENTRÉE] Débloquer" + (hasParty ? "  |  [TAB] Changer de perso" : "") + "  |  [K/ÉCHAP] Fermer";
         FontMetrics fmHint = g2d.getFontMetrics();
         g2d.drawString(hint, bx + (boxW - fmHint.stringWidth(hint)) / 2, by + boxH - (int) (10 * scale));
     }

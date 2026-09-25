@@ -22,15 +22,15 @@ public class equipementImplementation {
     // =========================================
     // 1. ARMES COMMUNES
     // =========================================
-    public weapon epee = new weapon("Épée", 1, 6, itemTypeEnum.SWORD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/9");
-    public weapon arc = new weapon("Arc", 1, 6, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("vrac/arc");
+    public weapon epee = new weapon("Épée à une main", 1, 6, itemTypeEnum.SWORD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/9");
+    public weapon arc = new weapon("Arc à deux mains", 1, 6, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("vrac/arc");
     public weapon dague = new weapon("Dague", 1, 4, itemTypeEnum.DAGGER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/5");
     public weapon bouclierBois = new weapon("Bouclier en bois", 1, 4, itemTypeEnum.SHIELD, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("prehistoric-platformer/hit-2");
-    public weapon baton = new weapon("Baton", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("prehistoric-platformer/wood-1");
-    public weapon marteau = new weapon("Marteau", 1, 6, itemTypeEnum.HAMMER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/5");
-    public weapon hache2main = new weapon("Hache a deux main", 1, 8, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 2).withSound("medieval-fantasy/10");
-    public weapon hache = new weapon("Hache", 1, 6, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/10");
-    public weapon arcLong = new weapon("Arc long", 1, 8, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 2).withSound("vrac/arc");
+    public weapon baton = new weapon("Bâton à deux mains", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("prehistoric-platformer/wood-1");
+    public weapon marteau = new weapon("Marteau à une main", 1, 6, itemTypeEnum.HAMMER, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/5");
+    public weapon hache2main = new weapon("Hache à deux mains", 1, 8, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 2).withSound("medieval-fantasy/10");
+    public weapon hache = new weapon("Hache à une main", 1, 6, itemTypeEnum.AXE, itemQualityTypeEnum.COMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LEGER, itemKnowledgeEnum.COMMUN, 1).withSound("medieval-fantasy/10");
+    public weapon arcLong = new weapon("Arc long à deux mains", 1, 8, itemTypeEnum.BOW, itemQualityTypeEnum.COMMON, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 2).withSound("vrac/arc");
 
     // =========================================
     // 2. POTIONS COMMUNES
@@ -60,10 +60,10 @@ public class equipementImplementation {
     // 5. ARMES INHABITUELLES
     // =========================================
     public weapon bouclierFer = new weapon("Bouclier en fer", 1, 6, itemTypeEnum.SHIELD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 8).withSound("vrac/coup-metalique");
-    public weapon epee2main = new weapon("Épée a deux main", 1, 8, itemTypeEnum.SWORD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 6).withSound("medieval-fantasy/10");
-    public weapon marteau2main = new weapon("Marteau a deux main", 1, 8, itemTypeEnum.HAMMER, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.STOMPING, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 4).withSound("vrac/coup-metalique");
-    public weapon halebarde = new weapon("Halebarde", 1, 10, itemTypeEnum.POLEARM, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 8).withSound("medieval-fantasy/10");
-    public weapon batonFerer = new weapon("Baton férer", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 5).withSound("vrac/coup-metalique");
+    public weapon epee2main = new weapon("Épée à deux mains", 1, 8, itemTypeEnum.SWORD, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 6).withSound("medieval-fantasy/10");
+    public weapon marteau2main = new weapon("Marteau à deux mains", 1, 8, itemTypeEnum.HAMMER, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.STOMPING, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 4).withSound("vrac/coup-metalique");
+    public weapon halebarde = new weapon("Halebarde à deux mains", 1, 10, itemTypeEnum.POLEARM, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.LOURD, itemKnowledgeEnum.COMMUN, 8).withSound("medieval-fantasy/10");
+    public weapon batonFerer = new weapon("Bâton ferré à deux mains", 1, 6, itemTypeEnum.STAFF, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.MELEE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.BLUNT, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 5).withSound("vrac/coup-metalique");
     public weapon oldGrimoire = new weapon("Grimoire poussiéreux", 1, 6, itemTypeEnum.BOOK, itemQualityTypeEnum.COMMON, weaponTypeEnum.MAGIC, false, damageTypeEnum.MAGICAL, attackeTypeEnum.BLUNT, itemWeightEnum.LEGER, itemKnowledgeEnum.TECHNIQUE, 12).withSound("rpg-battle-system/2");
     public weapon arbaleteHand = new weapon("Arbalète de poing", 1, 6, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.UNCOMMON, weaponTypeEnum.DISTANCE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LOURD, itemKnowledgeEnum.TECHNIQUE, 10).withSound("vrac/Crossbow");
 
@@ -110,7 +110,7 @@ public class equipementImplementation {
     public weapon grimoireRouge = new weapon("Grimoire de feu", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, false, damageTypeEnum.MAGICAL, attackeTypeEnum.FIRE, itemWeightEnum.LEGER, itemKnowledgeEnum.MYSTIQUE, 20).withSound("rpg-battle-system/2");
     public weapon grimoireBleu = new weapon("Grimoire de froid", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, false, damageTypeEnum.MAGICAL, attackeTypeEnum.FROST, itemWeightEnum.LEGER, itemKnowledgeEnum.MYSTIQUE, 20).withSound("rpg-battle-system/2");
     public weapon grimoireVert = new weapon("Grimoire de poison", 1, 8, itemTypeEnum.BOOK, itemQualityTypeEnum.RARE, weaponTypeEnum.MAGIC, false, damageTypeEnum.MAGICAL, attackeTypeEnum.POISON, itemWeightEnum.LEGER, itemKnowledgeEnum.MYSTIQUE, 20).withSound("rpg-battle-system/2");
-    public weapon arbalete = new weapon("Arbalète", 1, 12, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.RARE, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LOURD, itemKnowledgeEnum.TECHNIQUE, 10).withSound("vrac/Crossbow");
+    public weapon arbalete = new weapon("Arbalète à deux mains", 1, 12, itemTypeEnum.CROSSBOW, itemQualityTypeEnum.RARE, weaponTypeEnum.DISTANCE, true, damageTypeEnum.PHYSICAL, attackeTypeEnum.PIERCING, itemWeightEnum.LOURD, itemKnowledgeEnum.TECHNIQUE, 10).withSound("vrac/Crossbow");
 
     // =========================================
     // 10. POTIONS RARES
@@ -144,8 +144,8 @@ public class equipementImplementation {
     // =========================================
     // 13. ARMES LÉGENDAIRES
     // =========================================
-    public weapon lakua = new weapon("La kua", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 100).withSound("medieval-fantasy/10");
-    public weapon lacoubee = new weapon("La coubée", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 100).withSound("medieval-fantasy/10");
+    public weapon lakua = new weapon("La kua (à une main)", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 100).withSound("medieval-fantasy/10");
+    public weapon lacoubee = new weapon("La coubée (à une main)", 2, 10, itemTypeEnum.SWORD, itemQualityTypeEnum.LEGENDARY, weaponTypeEnum.MELEE, false, damageTypeEnum.PHYSICAL, attackeTypeEnum.SHARPNESS, itemWeightEnum.MOYEN, itemKnowledgeEnum.COMMUN, 100).withSound("medieval-fantasy/10");
     public weapon dagueAllusiner = createDagueAllusiner().withSound("medieval-fantasy/10");
     public weapon bouclierdesoufrance = createBouclierDesoufrance().withSound("medieval-fantasy/10");
 

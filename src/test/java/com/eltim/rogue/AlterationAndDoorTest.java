@@ -10,6 +10,7 @@ import com.eltim.rogue.system.InteractionSysteme;
 import com.eltim.rogue.world.map;
 import junit.framework.TestCase;
 
+import com.eltim.rogue.item.key;
 import java.util.List;
 
 public class AlterationAndDoorTest extends TestCase {
@@ -33,6 +34,7 @@ public class AlterationAndDoorTest extends TestCase {
         // Autel de Karin
         InteractionTile altar = new InteractionTile(10, 13, '£', "Prier le dieu Karin, le gond de la porte lâche");
 
+        InteractionSysteme.setCurrentLevel(new com.eltim.rogue.level.tutoLevel());
         InteractionSysteme.onEncounter(p, altar, gameMap);
         InteractionSysteme.executeAction(altar.getActionName());
 
@@ -71,5 +73,76 @@ public class AlterationAndDoorTest extends TestCase {
         debuff.tickTurn();
         assertEquals(0, debuff.getDuration());
         assertTrue(debuff.isExpired());
+    }
+
+    public void testTutoLevelVarainAndKarinHooks() {
+        com.eltim.rogue.level.tutoLevel tuto = new com.eltim.rogue.level.tutoLevel();
+        InteractionSysteme.setCurrentLevel(tuto);
+
+        map gameMap = new map(10, 10);
+        player p = new player(1, 1);
+        p.setBelief(Belief.SANS_RELIGION);
+
+        // Test Varain
+        com.eltim.rogue.entity.npc varain = new com.eltim.rogue.entity.npc(2, 1, 'V');
+        varain.setName("Varain");
+        InteractionSysteme.onEncounter(p, varain, gameMap);
+        assertTrue("Le menu doit être ouvert avec Varain", InteractionSysteme.isMenuOpen());
+        assertTrue("VarainDialogue doit être actif", com.eltim.rogue.system.dialogue.VarainDialogue.isDialogueActive());
+        com.eltim.rogue.system.dialogue.VarainDialogue.closeDialogue();
+
+        // Test échec prière si pas fidèle de Karin
+        door cellDoor = new door(3, 1, 'D', doorStateEnum.OLD, 152);
+        gameMap.addEntity(cellDoor);
+        InteractionTile altar = new InteractionTile(2, 1, '£', "Prier le dieu Karin, le gond de la porte lâche");
+
+        InteractionSysteme.onEncounter(p, altar, gameMap);
+        InteractionSysteme.executeAction(altar.getActionName());
+
+        assertTrue("Le joueur doit être marqué comme ayant prié", p.hasPrayedAtAltar);
+        assertEquals("La porte ne doit pas s'ouvrir si le joueur n'est pas fidèle de Karin", doorStateEnum.OLD, cellDoor.getState());
+        assertEquals("Un ancien autel à la gloire de Karin, dieu des voleurs.", tuto.getCustomExamineText(altar));
+    }
+
+    public void testDoorAndChestInteractable() {
+        map gameMap = new map(10, 10);
+        player p = new player(1, 1);
+        p.setForce(16);
+
+        // 1. Porte normale : options et ouverture
+        door normalDoor = new door(2, 1, 'D', doorStateEnum.NORMAL, 0);
+        List<String> doorOpts = normalDoor.getInteractionOptions(p);
+        assertTrue("Options porte normale", doorOpts.contains("Ouvrir"));
+        normalDoor.handleInteraction(p, "Ouvrir", gameMap);
+        assertEquals(doorStateEnum.OPEN, normalDoor.getState());
+        assertTrue(normalDoor.isOpen());
+        assertTrue(normalDoor.getInteractionOptions(p).isEmpty());
+
+        // 2. Porte verrouillée avec clé
+        door lockedDoor = new door(3, 1, 'D', doorStateEnum.LOCKED, 42);
+        key rightKey = new key("Clé en fer", 42);
+        key wrongKey = new key("Clé en cuivre", 99);
+        p.getInventory().add(wrongKey);
+
+        lockedDoor.handleInteraction(p, "Déverrouiller (Clé)", gameMap);
+        assertEquals("Porte doit rester fermée avec la mauvaise clé", doorStateEnum.LOCKED, lockedDoor.getState());
+
+        p.getInventory().add(rightKey);
+        lockedDoor.handleInteraction(p, "Déverrouiller (Clé)", gameMap);
+        assertEquals("Porte doit s'ouvrir avec la bonne clé", doorStateEnum.OPEN, lockedDoor.getState());
+        assertFalse("La clé doit avoir été consommée", p.getInventory().contains(rightKey));
+
+        // 3. Coffre : options, ouverture et transfert de butin
+        key testLoot = new key("Clé d'or", 999);
+        com.eltim.rogue.entity.environment.chest c = new com.eltim.rogue.entity.environment.chest(4, 1, "Coffre Test", List.of(testLoot));
+        List<String> chestOpts = c.getInteractionOptions(p);
+        assertTrue(chestOpts.contains("Ouvrir"));
+        assertFalse(c.isOpen());
+
+        int initialInvSize = p.getInventory().size();
+        c.handleInteraction(p, "Ouvrir", gameMap);
+        assertTrue(c.isOpen());
+        assertEquals("Le joueur doit avoir reçu l'objet", initialInvSize + 1, p.getInventory().size());
+        assertTrue(p.getInventory().contains(testLoot));
     }
 }

@@ -102,6 +102,7 @@ public class game {
 
         tutoLevel firstLevel = new tutoLevel();
         currentLevel = firstLevel;
+        com.eltim.rogue.system.InteractionSysteme.setCurrentLevel(firstLevel);
         currentMap = firstLevel.generate(player);
         
         state = GameState.PLAYING;
@@ -182,8 +183,8 @@ public class game {
         if (state == GameState.SKILL_MENU) {
             if (com.eltim.rogue.system.SkillMenuSystem.isSelectingTree()) {
                 // En mode modal de choix d'arbre, Échap annule le modal au lieu de fermer tout le menu
-                if (player != null && player.classe != null) {
-                    com.eltim.rogue.system.SkillMenuSystem.handleInput(key, player.classe);
+                if (player != null) {
+                    com.eltim.rogue.system.SkillMenuSystem.handleInput(key, player);
                 }
                 return;
             }
@@ -191,8 +192,8 @@ public class game {
                 state = GameState.PLAYING;
                 return;
             }
-            if (player != null && player.classe != null) {
-                com.eltim.rogue.system.SkillMenuSystem.handleInput(key, player.classe);
+            if (player != null) {
+                com.eltim.rogue.system.SkillMenuSystem.handleInput(key, player);
             }
             return;
         }
@@ -414,6 +415,7 @@ public class game {
                 currentMap.removeEntity(player);
                 TextLevel nextLevel = new TextLevel(targetFile);
                 currentLevel = nextLevel;
+                com.eltim.rogue.system.InteractionSysteme.setCurrentLevel(nextLevel);
                 currentMap = nextLevel.generate(player);
                 player.setX(nextX);
                 player.setY(nextY);

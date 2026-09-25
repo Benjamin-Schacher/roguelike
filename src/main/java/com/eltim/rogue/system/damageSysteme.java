@@ -9,29 +9,44 @@ import com.eltim.rogue.spell.spell;
 public class damageSysteme {
     
     public static void doDamageWithWeapon(entity attacker, entity target, weapon w, boolean isCrit) {
-        int damage = 0;
+        int baseRoll = 0;
+        int statMod = 0;
+        String diceFormula = "";
+        String statName = "";
+
         if (w != null) {
-            damage = w.rollWeaponDamage();
+            baseRoll = w.rollWeaponDamage();
+            diceFormula = w.getNbDice() + "d" + w.getDiceFaces();
             switch (w.getDamageType()) {
                 case PHYSICAL:
                     if (w.getWeaponType() == weaponTypeEnum.MELEE) {
-                        damage += diceRollSysteme.getModifier(attacker.getForce());
+                        statMod = diceRollSysteme.getModifier(attacker.getForce());
+                        statName = "Mod. Force";
+                    } else if (w.getWeaponType() == weaponTypeEnum.DISTANCE) {
+                        statMod = diceRollSysteme.getModifier(attacker.getAgilite());
+                        statName = "Mod. Agilité";
                     }
                     break;
                 case MAGICAL:
-                    damage += diceRollSysteme.getModifier(attacker.getIntelligence());
+                    statMod = diceRollSysteme.getModifier(attacker.getIntelligence());
+                    statName = "Mod. Int";
                     break;
             }
         } else {
-            damage = 1 + diceRollSysteme.getModifier(attacker.getForce());
+            baseRoll = 1;
+            diceFormula = "Mains nues (1)";
+            statMod = diceRollSysteme.getModifier(attacker.getForce());
+            statName = "Mod. Force";
         }
 
+        int subTotal = baseRoll + statMod;
+        if (subTotal < 1) subTotal = 1;
+
+        int finalDamage = subTotal;
         if (isCrit) {
-            damage *= 2;
+            finalDamage *= 2;
         }
 
-        if (damage < 1) damage = 1;
-        
         double modifier = 1.0;
 
         if (w != null && target.getWeaknessList() != null) {
@@ -50,16 +65,37 @@ public class damageSysteme {
             }
         }
 
-        damage *= (int) modifier;
-        if (damage < 1) damage = 1;
+        finalDamage = (int) (finalDamage * modifier);
+        if (finalDamage < 1) finalDamage = 1;
         
-        target.setLifePoint(target.getLifePoint() - damage);
+        target.setLifePoint(target.getLifePoint() - finalDamage);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("  ↳ ").append(finalDamage).append(" dégâts");
+        if (isCrit) sb.append(" (CRITIQUE !)");
         
-        if (isCrit) {
-            combatSysteme.getLog().add("  -> CRITIQUE ! " + damage + " dégâts.");
+        sb.append(" [");
+        if (w != null) {
+            sb.append("Jet ").append(diceFormula).append(": ").append(baseRoll);
         } else {
-            combatSysteme.getLog().add("  -> " + damage + " dégâts.");
+            sb.append(diceFormula);
         }
+        
+        if (!statName.isEmpty()) {
+            sb.append(" + ").append(statName).append(": ").append(statMod >= 0 ? "+" + statMod : statMod);
+        }
+
+        if (isCrit) {
+            sb.append(" = ").append(subTotal).append(" x2 CRIT");
+        }
+
+        if (modifier != 1.0) {
+            sb.append(" x").append(modifier).append(" Résist/Faiblesse");
+        }
+
+        sb.append("]");
+
+        combatSysteme.getLog().add(sb.toString());
     }
 
     public static void dodamageWithSpell(entity attacker, entity target, spell spell){

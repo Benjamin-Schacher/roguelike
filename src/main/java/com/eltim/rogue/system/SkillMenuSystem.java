@@ -3,18 +3,22 @@ package com.eltim.rogue.system;
 import com.eltim.rogue.entity.classe.Skill;
 import com.eltim.rogue.entity.classe.SkillTree;
 import com.eltim.rogue.entity.classe.classe;
+import com.eltim.rogue.entity.player;
+import com.eltim.rogue.entity.npc;
 
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Gère la navigation et les achats dans le menu de compétences avec 4 emplacements d'arbres.
+ * Gère la navigation et les achats dans le menu de compétences avec 4 emplacements d'arbres
+ * et le changement de personnage (Héros / Compagnons via TAB).
  */
 public class SkillMenuSystem {
 
     private static int selectedSlot = 0; // 0 à 3
     private static int selectedTier = 0; // 0 à 4
+    private static int activeCharIndex = 0; // 0 = Héros, 1 = Compagnon 1, etc.
     private static classe currentClasse = null;
 
     // État du modal de choix d'arbre pour un slot vide
@@ -27,15 +31,58 @@ public class SkillMenuSystem {
         currentClasse = c;
         selectedSlot = 0;
         selectedTier = 0;
+        activeCharIndex = 0;
         isSelectingTree = false;
         treePickerIndex = 0;
         statusMessage = null;
     }
 
-    public static void handleInput(KeyEvent key, classe playerClasse) {
+    public static classe getActiveClasse(player p) {
+        if (p == null) return currentClasse;
+        if (activeCharIndex <= 0 || p.getParty() == null || p.getParty().isEmpty()) {
+            return p.classe;
+        }
+        int compIdx = activeCharIndex - 1;
+        if (compIdx >= 0 && compIdx < p.getParty().size()) {
+            npc companion = p.getParty().get(compIdx);
+            if (companion.classe != null) return companion.classe;
+        }
+        return p.classe;
+    }
+
+    public static String getActiveCharacterName(player p) {
+        if (p == null) return "HÉROS";
+        if (activeCharIndex <= 0 || p.getParty() == null || p.getParty().isEmpty()) {
+            return p.getName() + " (HÉROS)";
+        }
+        int compIdx = activeCharIndex - 1;
+        if (compIdx >= 0 && compIdx < p.getParty().size()) {
+            return p.getParty().get(compIdx).getName() + " (COMPAGNON)";
+        }
+        return p.getName() + " (HÉROS)";
+    }
+
+    public static void handleInput(KeyEvent key, player playerObj) {
+        if (playerObj == null) return;
+        int code = key.getKeyCode();
+
+        // Touche TAB : Passer au personnage suivant (Héros -> Compagnon 1 -> Compagnon 2 -> Héros)
+        if (code == KeyEvent.VK_TAB) {
+            int partySize = (playerObj.getParty() != null) ? playerObj.getParty().size() : 0;
+            int totalChars = 1 + partySize;
+            if (totalChars > 1) {
+                activeCharIndex = (activeCharIndex + 1) % totalChars;
+                selectedSlot = 0;
+                selectedTier = 0;
+                isSelectingTree = false;
+                statusMessage = null;
+            }
+            return;
+        }
+
+        classe playerClasse = getActiveClasse(playerObj);
         if (playerClasse == null) return;
         currentClasse = playerClasse;
-        int code = key.getKeyCode();
 
         // 1. Mode Modal de Sélection d'un nouvel Arbre
         if (isSelectingTree) {
@@ -154,6 +201,10 @@ public class SkillMenuSystem {
         }
     }
 
+    public static void handleInput(KeyEvent key, classe playerClasse) {
+        if (currentClasse == null) currentClasse = playerClasse;
+    }
+
     private static void clampSelectedTier(classe playerClasse) {
         if (playerClasse.activeSlots[selectedSlot] != null) {
             SkillTree tree = playerClasse.activeSlots[selectedSlot];
@@ -164,10 +215,11 @@ public class SkillMenuSystem {
     }
 
     public static int getSelectedSlot() { return selectedSlot; }
-    public static int getSelectedTree() { return selectedSlot; } // Rétrocompatibilité
+    public static int getSelectedTree() { return selectedSlot; }
     public static int getSelectedTier() { return selectedTier; }
     public static boolean isSelectingTree() { return isSelectingTree; }
     public static int getTreePickerIndex() { return treePickerIndex; }
     public static List<SkillTree> getUnslottedTrees() { return unslottedTrees; }
     public static String getStatusMessage() { return statusMessage; }
+    public static int getActiveCharIndex() { return activeCharIndex; }
 }

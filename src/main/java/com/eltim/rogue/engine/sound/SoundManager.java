@@ -62,8 +62,13 @@ public class SoundManager {
      * @param trackName Nom ou partie du nom du fichier audio
      */
     public synchronized void playMusic(String trackName) {
-        if (trackName == null || trackName.trim().isEmpty() || trackName.equalsIgnoreCase(currentMusicTrack)) {
-            return; // Déjà en cours de lecture
+        if (trackName == null || trackName.trim().isEmpty()) {
+            return;
+        }
+
+        // Déjà en cours de lecture
+        if (trackName.equalsIgnoreCase(currentMusicTrack) && musicRunning) {
+            return;
         }
 
         stopMusic();
@@ -74,10 +79,16 @@ public class SoundManager {
         musicRunning = true;
         musicThread = new Thread(() -> {
             while (musicRunning) {
+                SourceDataLine line = null;
+                AudioInputStream ais = null;
                 try {
-                    AudioInputStream ais = findAudioStream(currentMusicTrack);
+                    ais = findAudioStream(currentMusicTrack);
                     if (ais == null) {
                         System.out.println("[SoundManager] Musique / Ambiance '" + currentMusicTrack + "' introuvable.");
+                        synchronized (SoundManager.this) {
+                            musicRunning = false;
+                            currentMusicTrack = null;
+                        }
                         break;
                     }
 
@@ -99,7 +110,7 @@ public class SoundManager {
                         info = new DataLine.Info(SourceDataLine.class, format);
                     }
 
-                    SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
+                    line = (SourceDataLine) AudioSystem.getLine(info);
                     line.open(format);
 
                     synchronized (SoundManager.this) {
@@ -114,12 +125,31 @@ public class SoundManager {
                         line.write(buffer, 0, bytesRead);
                     }
 
-                    line.drain();
-                    line.close();
-                    ais.close();
+                    if (musicRunning) {
+                        line.drain();
+                    }
                 } catch (Exception e) {
-                    System.err.println("[SoundManager] Erreur streaming ambiance '" + currentMusicTrack + "' : " + e.getMessage());
+                    if (musicRunning) {
+                        System.err.println("[SoundManager] Erreur streaming ambiance '" + currentMusicTrack + "' : " + e.getMessage());
+                    }
                     break;
+                } finally {
+                    if (line != null) {
+                        try {
+                            line.stop();
+                            line.close();
+                        } catch (Exception ignored) {}
+                    }
+                    if (ais != null) {
+                        try {
+                            ais.close();
+                        } catch (Exception ignored) {}
+                    }
+                    synchronized (SoundManager.this) {
+                        if (musicLine == line) {
+                            musicLine = null;
+                        }
+                    }
                 }
             }
         }, "AudioAmbianceThread");
@@ -138,8 +168,8 @@ public class SoundManager {
         String track = "Dark Tomb";
         if (clean.contains("tuto") || clean.contains("prison")) {
             track = "Dark Tomb";
-        } else if (clean.contains("level1") || clean.contains("sous-sol") || clean.contains("forteresse")) {
-            track = "level1";
+        } else if (clean.contains("level1") || clean.contains("sous-sol") || clean.contains("sous sol") || clean.contains("forteresse")) {
+            track = "short_adventure";
         }
 
         savedPreviousTrack = track;
@@ -147,7 +177,7 @@ public class SoundManager {
     }
 
     public void startCombatMusic() {
-        if (currentMusicTrack != null && !currentMusicTrack.equalsIgnoreCase("combat")) {
+        if (currentMusicTrack != null && !currentMusicTrack.equalsIgnoreCase("combat") && !currentMusicTrack.equalsIgnoreCase("hurryup")) {
             savedPreviousTrack = currentMusicTrack;
         }
         playMusic("combat");
@@ -196,12 +226,51 @@ public class SoundManager {
         }).start();
     }
 
-    private AudioInputStream findAudioStream(String name) {
-        if (name == null || name.isEmpty()) return null;
+    public AudioInputStream findAudioStream(String name) {
+        if (name == null || name.trim().isEmpty()) return null;
 
-        String cleanName = name;
-        if (!name.endsWith(".wav") && !name.endsWith(".mp3") && !name.endsWith(".ogg")) {
-            cleanName = name + ".wav";
+        String trimmed = name.trim();
+        AudioInputStream stream = resolveStream(trimmed);
+        if (stream != null) return stream;
+
+        // Fallbacks intelligents si le nom logique n'a pas de fichier nommé exactement ainsi
+        String lower = trimmed.toLowerCase();
+        if (lower.equals("combat") || lower.contains("battle") || lower.contains("fight")) {
+            stream = resolveStream("hurryup");
+            if (stream != null) return stream;
+            stream = resolveStream("short_adventure");
+            if (stream != null) return stream;
+        } else if (lower.equals("level1") || lower.contains("sous-sol") || lower.contains("forteresse")) {
+            stream = resolveStream("short_adventure");
+            if (stream != null) return stream;
+            stream = resolveStream("when_angels_cry");
+            if (stream != null) return stream;
+            stream = resolveStream("Dark Tomb");
+            if (stream != null) return stream;
+        } else if (lower.contains("tuto") || lower.contains("prison") || lower.contains("dark tomb") || lower.contains("cave")) {
+            stream = resolveStream("Dark Tomb");
+            if (stream != null) return stream;
+        } else if (lower.equals("boss")) {
+            stream = resolveStream("snd_music_electrictheme");
+            if (stream != null) return stream;
+            stream = resolveStream("hurryup");
+            if (stream != null) return stream;
+        } else if (lower.equals("menu") || lower.contains("creation")) {
+            stream = resolveStream("when_angels_cry");
+            if (stream != null) return stream;
+            stream = resolveStream("oldskoolmix");
+            if (stream != null) return stream;
+        }
+
+        return null;
+    }
+
+    private AudioInputStream resolveStream(String name) {
+        if (name == null || name.trim().isEmpty()) return null;
+
+        String cleanName = name.trim();
+        if (!cleanName.endsWith(".wav") && !cleanName.endsWith(".mp3") && !cleanName.endsWith(".ogg")) {
+            cleanName = cleanName + ".wav";
         }
 
         // 1. Recherche par Classpath Resource
@@ -244,22 +313,33 @@ public class SoundManager {
 
     private File searchAudioFileRecursive(File[] dirs, String queryName) {
         String target = queryName.toLowerCase().trim();
+
+        // Passe 1 : correspondance exacte
         for (File dir : dirs) {
             if (dir.exists() && dir.isDirectory()) {
-                File res = findInDir(dir, target);
+                File res = findInDirExact(dir, target);
                 if (res != null) return res;
             }
         }
+
+        // Passe 2 : correspondance partielle (ex: "Dark Tomb" trouve "- Dark Tomb - Cave Sounds 45 Minutes 🦇.wav")
+        for (File dir : dirs) {
+            if (dir.exists() && dir.isDirectory()) {
+                File res = findInDirContains(dir, target);
+                if (res != null) return res;
+            }
+        }
+
         return null;
     }
 
-    private File findInDir(File dir, String query) {
+    private File findInDirExact(File dir, String query) {
         File[] files = dir.listFiles();
         if (files == null) return null;
 
         for (File f : files) {
             if (f.isDirectory()) {
-                File sub = findInDir(f, query);
+                File sub = findInDirExact(f, query);
                 if (sub != null) return sub;
             } else {
                 String fullName = f.getName().toLowerCase();
@@ -269,7 +349,40 @@ public class SoundManager {
 
                 String relPath = f.getPath().replace('\\', '/').toLowerCase();
 
-                if (fullName.equals(query) || nameNoExt.equals(query) || relPath.endsWith("/" + query + ".ogg") || relPath.endsWith("/" + query + ".wav") || relPath.endsWith("/" + query)) {
+                if (fullName.equals(query) || nameNoExt.equals(query)
+                        || relPath.endsWith("/" + query + ".ogg")
+                        || relPath.endsWith("/" + query + ".wav")
+                        || relPath.endsWith("/" + query + ".mp3")
+                        || relPath.endsWith("/" + query)) {
+                    return f;
+                }
+            }
+        }
+        return null;
+    }
+
+    private File findInDirContains(File dir, String query) {
+        File[] files = dir.listFiles();
+        if (files == null) return null;
+
+        String cleanQuery = query.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                File sub = findInDirContains(f, query);
+                if (sub != null) return sub;
+            } else {
+                String fullName = f.getName().toLowerCase();
+                String nameNoExt = fullName;
+                int dotIdx = fullName.lastIndexOf('.');
+                if (dotIdx > 0) nameNoExt = fullName.substring(0, dotIdx);
+
+                if (nameNoExt.contains(query) || fullName.contains(query)) {
+                    return f;
+                }
+
+                String cleanName = nameNoExt.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+                if (!cleanQuery.isEmpty() && cleanName.contains(cleanQuery)) {
                     return f;
                 }
             }
@@ -282,7 +395,11 @@ public class SoundManager {
         try {
             if (line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
                 FloatControl gainControl = (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
+                float min = gainControl.getMinimum();
+                float max = gainControl.getMaximum();
                 float dB = (float) (Math.log(Math.max(0.0001f, volume)) / Math.log(10.0) * 20.0);
+                if (dB < min) dB = min;
+                if (dB > max) dB = max;
                 gainControl.setValue(dB);
             }
         } catch (Exception ignored) {}

@@ -1,5 +1,6 @@
 [INFO]
 name = Sous sol de la forteresse
+ambiance = short_adventure
 spawn = 12,31
 
 [DESCRIPTIONS]
@@ -9,10 +10,7 @@ w = Une rivière souterraine s'écoule rapidement dans les profondeurs.
 P = Une armure de capitaine fantomatique repose ici.
 
 [MONSTERS]
-M = Garde Squelette | HP:15 | XP:25 | AGI:12
-
-[NPCS]
-C = Célestin | HP:20 | STR:14 | AGI:10
+M = Mort vivant 
 
 [TRANSITIONS]
 <tuto-> = levels/tuto.txt | spawn: 26,1 | msg: Vous retournez dans la Prison.

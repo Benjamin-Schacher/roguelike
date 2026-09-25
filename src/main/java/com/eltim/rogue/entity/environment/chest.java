@@ -1,17 +1,21 @@
 package com.eltim.rogue.entity.environment;
 
 import com.eltim.rogue.entity.base.entity;
+import com.eltim.rogue.entity.base.Interactable;
+import com.eltim.rogue.entity.player;
 import com.eltim.rogue.item.weapon;
 import com.eltim.rogue.item.base.item;
 import com.eltim.rogue.item.enumerateur.chestTypeEnum;
 import com.eltim.rogue.item.enumerateur.weaponTypeEnum;
 import com.eltim.rogue.item.enumerateur.itemQualityTypeEnum;
 import com.eltim.rogue.item.ItemFactory;
+import com.eltim.rogue.system.ExplorationLog;
+import com.eltim.rogue.world.map;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class chest extends entity {
+public class chest extends entity implements Interactable {
     private List<item> loot;
     private boolean isOpen;
     private boolean randomLoot;
@@ -129,6 +133,42 @@ public class chest extends entity {
 
     public void setOpen(boolean open) {
         this.isOpen = open;
+    }
+
+    @Override
+    public List<String> getInteractionOptions(player p) {
+        List<String> options = new ArrayList<>();
+        options.add("Ouvrir");
+        options.add("Partir");
+        return options;
+    }
+
+    @Override
+    public void handleInteraction(player p, String action, map currentMap) {
+        if (action.equals("Ouvrir")) {
+            if (!isOpen()) {
+                setOpen(true);
+                com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("chest_open");
+                if (isTrapped()) {
+                    int trapDamage = (int) (Math.random() * 6) + 1;
+                    p.setLifePoint(p.getLifePoint() - trapDamage);
+                    com.eltim.rogue.engine.sound.SoundManager.getInstance().playSFX("trap");
+                    ExplorationLog.addDescription("PIÈGE ! Le coffre explose en s'ouvrant (" + trapDamage + " dégâts) !");
+                }
+                List<item> chestLoot = getLoot();
+                if (chestLoot.isEmpty()) {
+                    ExplorationLog.addDescription("Le coffre est vide.");
+                } else {
+                    for (item it : chestLoot) {
+                        p.getInventory().add(it);
+                        ExplorationLog.addDescription("Obtenu : " + it.getName());
+                    }
+                    chestLoot.clear();
+                }
+            } else {
+                ExplorationLog.addDescription("Ce coffre a déjà été vidé.");
+            }
+        }
     }
 }
 

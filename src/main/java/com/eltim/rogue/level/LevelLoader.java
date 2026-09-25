@@ -273,21 +273,59 @@ public class LevelLoader {
             }
         }
 
-        // Place le joueur s'il n'est pas encore sur la carte
-        if (p != null && !m.getEntities().contains(p)) {
-            p.setX(data.spawnX);
-            p.setY(data.spawnY);
-            m.addEntity(p);
+        // Place le joueur et ses compagnons sur la nouvelle carte
+        if (p != null) {
+            if (!m.getEntities().contains(p)) {
+                p.setX(data.spawnX);
+                p.setY(data.spawnY);
+                m.addEntity(p);
+            }
+
+            int companionOffset = 1;
+            for (npc companion : p.getParty()) {
+                // Éviter d'avoir un PNJ statique en double s'il a déjà été recruté
+                m.getEntities().removeIf(e -> e instanceof npc && e != companion && e.getName() != null && e.getName().equalsIgnoreCase(companion.getName()));
+
+                if (!m.getEntities().contains(companion)) {
+                    m.addEntity(companion);
+                }
+
+                // Définir la position du compagnon adjacente au point d'apparition du joueur
+                int compX = data.spawnX;
+                int compY = data.spawnY + companionOffset;
+                if (!m.isWalkable(compX, compY)) {
+                    compX = data.spawnX - companionOffset;
+                    compY = data.spawnY;
+                }
+                if (!m.isWalkable(compX, compY)) {
+                    compX = data.spawnX + companionOffset;
+                    compY = data.spawnY;
+                }
+                if (!m.isWalkable(compX, compY)) {
+                    compX = data.spawnX;
+                    compY = data.spawnY - companionOffset;
+                }
+                companion.setX(compX);
+                companion.setY(compY);
+                companionOffset++;
+            }
         }
 
         return m;
     }
 
     private static monster createMonster(int x, int y, char sym, String config) {
-        monster m1 = new monster(x, y, sym);
-        // Format : Nom | HP:15 | XP:25 | AGI:12 | LOOT:Clé rouillée:152
         String[] parts = config.split("\\|");
-        m1.setName(parts[0].trim());
+        String monsterName = parts[0].trim();
+
+        monster m1;
+        if (com.eltim.rogue.entity.MonsterRegistry.hasBlueprint(monsterName)) {
+            m1 = com.eltim.rogue.entity.MonsterRegistry.createMonster(monsterName, x, y);
+            m1.setSymbol(sym);
+        } else {
+            m1 = new monster(x, y, sym);
+            m1.setName(monsterName);
+        }
 
         for (int i = 1; i < parts.length; i++) {
             String p = parts[i].trim();
@@ -312,7 +350,7 @@ public class LevelLoader {
             } else if (p.startsWith("LOOT:")) {
                 String[] lootInfo = p.substring(5).trim().split(":");
                 if (lootInfo.length >= 2) {
-                    m1.addLoot(new key(lootInfo[0].trim(), Integer.parseInt(lootInfo[1].trim())));
+                    m1.addGuaranteedLoot(new key(lootInfo[0].trim(), Integer.parseInt(lootInfo[1].trim())));
                 }
             } else if (p.startsWith("SON:") || p.startsWith("SOUND:") || p.startsWith("BRUITAGE:")) {
                 int idx = p.indexOf(":");

@@ -56,9 +56,11 @@ public class weapon extends item {
 
     public int getDamageDiceCount() { return damageDiceCount; }
     public void setDamageDiceCount(int damageDiceCount) { this.damageDiceCount = damageDiceCount; }
+    public int getNbDice() { return damageDiceCount; }
 
     public int getDamageDiceSides() { return damageDiceSides; }
     public void setDamageDiceSides(int damageDiceSides) { this.damageDiceSides = damageDiceSides; }
+    public int getDiceFaces() { return damageDiceSides; }
 
     public weaponTypeEnum getWeaponType() { return weaponType; }
     public void setWeaponType(weaponTypeEnum type) { this.weaponType = type; }

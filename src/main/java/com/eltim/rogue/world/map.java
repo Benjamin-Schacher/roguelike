@@ -59,6 +59,10 @@ public class map {
         return height;
     }
 
+    public boolean isWalkable(int x, int y) {
+        return getTile(x, y).isWalkable();
+    }
+
     public String getLevelName() {
         return levelName;
     }

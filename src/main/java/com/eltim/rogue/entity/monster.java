@@ -15,6 +15,7 @@ public class monster extends entity {
 
     private int xpReward = 10; 
     private List<item> lootTable = new ArrayList<>(); 
+    private List<item> guaranteedLoots = new ArrayList<>();
 
     public monster(int x, int y, char symbol) {
         super(x, y, symbol);
@@ -48,12 +49,17 @@ public class monster extends entity {
 
     public List<item> rollLoots() {
         List<item> dropped = new ArrayList<>();
-        if (lootTable.isEmpty()) return dropped;
+        // Loots garantis à 100% (ex: clés de quête/cellule)
+        for (item gItem : guaranteedLoots) {
+            dropped.add(gItem);
+        }
 
-        int count = 1 + (int)(Math.random() * 3);
-        for (int i = 0; i < count; i++) {
-            int index = (int) (Math.random() * lootTable.size());
-            dropped.add(lootTable.get(index));
+        if (!lootTable.isEmpty()) {
+            int count = 1 + (int)(Math.random() * 3);
+            for (int i = 0; i < count; i++) {
+                int index = (int) (Math.random() * lootTable.size());
+                dropped.add(lootTable.get(index));
+            }
         }
         return dropped;
     }
@@ -82,5 +88,21 @@ public class monster extends entity {
     public List<item> getLootTable() { return lootTable; }
     public void setLootTable(List<item> lootTable) { this.lootTable = lootTable; }
 
-    public void addLoot(item i) { this.lootTable.add(i); }
+    public List<item> getGuaranteedLoots() { return guaranteedLoots; }
+
+    public void addGuaranteedLoot(item i) {
+        if (i != null) {
+            this.guaranteedLoots.add(i);
+        }
+    }
+
+    public void addLoot(item i) {
+        if (i != null) {
+            if (i instanceof com.eltim.rogue.item.key) {
+                this.guaranteedLoots.add(i);
+            } else {
+                this.lootTable.add(i);
+            }
+        }
+    }
 }
